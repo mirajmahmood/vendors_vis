@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Vendors by Governate</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src='csv2geojson.js'></script>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
+
+    <style>
+        body { font-family:'Arial'; font-size:12px; margin:0; padding:0; }
+        #map { position:absolute; top:100px; bottom:0; width:80%; height: 80%  }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<div id='controls' style="padding:10px">
+	<label>Vendor type:</label>
+	<select id='vendor' onchange="javascript:get_cluster(value);">
+		<option id="All" value="All">All</option>
+		<option id="Restaurants" value="Restaurants">Restaurants</option>
+		<option id="Pharmacy" value="Pharmacy">Pharmacy</option>
+		<option id="Grocery" value="Grocery">Grocery</option>
+		<option id="Cafe & Desserts" value="Cafe & Desserts">Cafe & Desserts</option>
+		<option id="Health & Beauty" value="Health & Beauty">Health & Beauty</option>
+	</select>
+
+	<br>
+	<label>Total zones:</label>
+	<input></input>
+
+	<br>
+	<label>Total drivers available:</label>
+	<input></input>
+</div>
+
+<script type="text/javascript" src="vendors.js"></script>
+<script type="text/javascript">
+
+
+mapboxgl.accessToken = 'pk.eyJ1Ijoibm90bWlyYWoiLCJhIjoiY2pmYzd4Nno0MXRiNzQwcTdydXNibzZtaCJ9.KwcKrFYXAQp-LqhyX-8l1Q';
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v9', // stylesheet location
+    center: [47.990965, 29.367537], // starting position [lng, lat]
+    zoom: 13 // starting zoom
+});
+
+function get_restaurants(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/jky2ynsxvx2nfcx24uhbjybilmpihp',
+        dataType: "text",
+        success: function(csvData) {makeGeoJSON(csvData);}
+     });
+}
+
+function get_pharms(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/mj7crve6q7a5qctnmdb23rg7biozgt',
+        dataType: "text",
+        success: function(csvData) {makePharm(csvData);}
+     });
+}
+
+function get_cafes(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/lwgwstl3krs3wk27bnkb7e7cqhbgyb',
+        dataType: "text",
+        success: function(csvData) {
+	        	makeCafe(csvData); 
+	        	//makeDesserts(csvData)
+        	;}
+     });
+}
+
+$(document).ready(function() {
+
+	get_restaurants();
+	get_pharms();
+	get_cafes();
+
+});
+
+function get_cluster(value){
+	map.getStyle().layers.forEach(function(layer) {
+	    if (layer.type === 'circle') {
+	        map.removeLayer(layer.id);
+	    }
+	});
+
+	if (value=="Restaurants"){
+
+		addRestLayers();
+	}
+	else if (value=="Pharmacy"){
+
+		addPharmLayers();
+	
+	}
+	else if (value=="Cafe & Desserts"){
+
+		addCafeLayers();
+	
+	}
+	else if (value=="All"){
+		addRestLayers();
+		addPharmLayers();
+		addCafeLayers();
+
+	}
+
+}
+
+
+</script>
+</body>
+</html>
