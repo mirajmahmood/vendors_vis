@@ -54,7 +54,7 @@ function get_restaurants(){
         type: "GET",
         url: 'https://query.data.world/s/jky2ynsxvx2nfcx24uhbjybilmpihp',
         dataType: "text",
-        success: function(csvData) {makeGeoJSON(csvData);}
+        success: function(csvData) {makeRest(csvData);}
      });
 }
 
@@ -74,17 +74,37 @@ function get_cafes(){
         dataType: "text",
         success: function(csvData) {
 	        	makeCafe(csvData); 
-	        	//makeDesserts(csvData)
         	;}
      });
 }
-
+function get_desserts(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/abgif5awfl3b2enk5tqwloki5zbovm',
+        dataType: "text",
+        success: function(csvData) {
+	        	makeDesserts(csvData); 
+        	;}
+     });
+}
+function get_grocery(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/n5qsd6cmgc3a352x6mmwek7dbia6s7',
+        dataType: "text",
+        success: function(csvData) {
+	        	makeGrocery(csvData); 
+        	;}
+     });
+}
 $(document).ready(function() {
 
-	get_restaurants();
+	get_grocery();
 	get_pharms();
 	get_cafes();
-
+	get_desserts();
+	get_restaurants();
+	
 });
 
 function get_cluster(value){
@@ -106,12 +126,16 @@ function get_cluster(value){
 	else if (value=="Cafe & Desserts"){
 
 		addCafeLayers();
+		addDessertLayers();
+
+	}
+	else if (value=="Grocery"){
+
+		addGroceryLayers();
 	
 	}
 	else if (value=="All"){
-		addRestLayers();
-		addPharmLayers();
-		addCafeLayers();
+		addAllVendorLayers();
 
 	}
 

@@ -1,7 +1,7 @@
 
 
 //green
-function makeGeoJSON(csvData) {
+function makeRest(csvData) {
     csv2geojson.csv2geojson(csvData, {
         latfield: 'latitude',
         lonfield: 'longitude',
@@ -34,8 +34,187 @@ function makeGeoJSON(csvData) {
         });
     });
 }
+//red
+function makePharm(csvData) {
+
+    csv2geojson.csv2geojson(csvData, {
+        latfield: 'latitude',
+        lonfield: 'longitude',
+        delimiter: ','
+    }, function(err, data) {
+
+            map.addSource("pharmacies",
+                {
+                    type: "geojson",
+                    data: data,
+                    cluster: true, // Enable clustering
+                    clusterRadius: 50, // Radius of each cluster when clustering points
+                    clusterMaxZoom: 1 // Max zoom to cluster points on
+                });
+
+
+            map.addLayer({
+                id: 'cluster-count_pharm',
+                type: 'symbol',
+                source: 'pharmacies',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-font': ['Arial'],
+                    'text-size': 12
+                }
+            });
+            addPharmLayers();
+
+        });
+}
+//blue
+function makeCafe(csvData) {
+
+    csv2geojson.csv2geojson(csvData, {
+        latfield: 'latitude',
+        lonfield: 'longitude',
+        delimiter: ','
+    }, function(err, data) {
+
+            map.addSource("cafes",
+                {
+                    type: "geojson",
+                    data: data,
+                    cluster: true, // Enable clustering
+                    clusterRadius: 50, // Radius of each cluster when clustering points
+                    clusterMaxZoom: 1 // Max zoom to cluster points on
+                });
+
+
+            map.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'cafes',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-font': ['Arial'],
+                    'text-size': 12
+                }
+            });
+            addCafeLayers();
+
+        });
+}
+
+function makeDessert(csvData) {
+
+    csv2geojson.csv2geojson(csvData, {
+        latfield: 'latitude',
+        lonfield: 'longitude',
+        delimiter: ','
+    }, function(err, data) {
+
+            map.addSource("desserts",
+                {
+                    type: "geojson",
+                    data: data,
+                    cluster: true, // Enable clustering
+                    clusterRadius: 50, // Radius of each cluster when clustering points
+                    clusterMaxZoom: 1 // Max zoom to cluster points on
+                });
+
+
+            map.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'desserts',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-font': ['Arial'],
+                    'text-size': 12
+                }
+            });
+            addDessertLayers();
+
+        });
+}
+
+function makeGrocery(csvData) {
+
+    csv2geojson.csv2geojson(csvData, {
+        latfield: 'latitude',
+        lonfield: 'longitude',
+        delimiter: ','
+    }, function(err, data) {
+
+            map.addSource("groceries",
+                {
+                    type: "geojson",
+                    data: data,
+                    cluster: true, // Enable clustering
+                    clusterRadius: 50, // Radius of each cluster when clustering points
+                    clusterMaxZoom: 1 // Max zoom to cluster points on
+                });
+
+
+            map.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'groceries',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count}',
+                    'text-font': ['Arial'],
+                    'text-size': 12
+                }
+            });
+            addGroceryLayers();
+
+        });
+}
+
+//yellow
+function addCafeLayers(){
+    map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'cafes',
+        paint: {
+            'circle-color': {
+                property: 'point_count',
+                type: 'interval',
+                stops: [
+                    [0, '#ffff00'],
+                    [10, '#ffff00'],
+                    [100, '#ffff00'],
+                ]
+            },
+            'circle-radius': {
+                property: 'point_count',
+                type: 'interval',
+                stops: [
+                    [0, 20],
+                    [10, 30],
+                    [100, 50]
+                ]
+            },
+            'circle-opacity': 0.5
+        }
+    });
+    map.addLayer({
+        id: 'cafe',
+        type: 'circle',
+        source: 'cafes',
+        filter: ['!has', 'point_count'],
+        paint: {
+            'circle-color': '#ffff00',
+            'circle-radius': 6,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff',
+            'circle-opacity': 0.5
+        },
+    });
+}
 function addRestLayers(){
-	map.addLayer({
+    map.addLayer({
         id: 'clusters_rest',
         type: 'circle',
         source: 'restaurants',
@@ -77,7 +256,6 @@ function addRestLayers(){
         },
     });
 }
-
 function addPharmLayers(){
 
     map.addLayer({
@@ -121,90 +299,20 @@ function addPharmLayers(){
         },
     });
 }
-//red
-function makePharm(csvData) {
+function addDessertLayers(){
 
-    csv2geojson.csv2geojson(csvData, {
-        latfield: 'latitude',
-        lonfield: 'longitude',
-        delimiter: ','
-    }, function(err, data) {
-
-            map.addSource("pharmacies",
-                {
-                    type: "geojson",
-                    data: data,
-                    cluster: true, // Enable clustering
-                    clusterRadius: 50, // Radius of each cluster when clustering points
-                    clusterMaxZoom: 1 // Max zoom to cluster points on
-                });
-
-
-            map.addLayer({
-                id: 'cluster-count_pharm',
-                type: 'symbol',
-                source: 'pharmacies',
-                filter: ['has', 'point_count'],
-                layout: {
-                    'text-field': '{point_count}',
-                    'text-font': ['Arial'],
-                    'text-size': 12
-                }
-            });
-            addPharmLayers();
-
-        });
-
-}
-//blue
-function makeCafe(csvData) {
-
-    csv2geojson.csv2geojson(csvData, {
-        latfield: 'latitude',
-        lonfield: 'longitude',
-        delimiter: ','
-    }, function(err, data) {
-
-            map.addSource("cafes",
-                {
-                    type: "geojson",
-                    data: data,
-                    cluster: true, // Enable clustering
-                    clusterRadius: 50, // Radius of each cluster when clustering points
-                    clusterMaxZoom: 1 // Max zoom to cluster points on
-                });
-
-
-            map.addLayer({
-                id: 'cluster-count',
-                type: 'symbol',
-                source: 'cafes',
-                filter: ['has', 'point_count'],
-                layout: {
-                    'text-field': '{point_count}',
-                    'text-font': ['Arial'],
-                    'text-size': 12
-                }
-            });
-            addCafeLayers();
-
-        });
-
-}
-
-function addCafeLayers(){
     map.addLayer({
-        id: 'clusters',
+        id: 'clusters_dest',
         type: 'circle',
-        source: 'cafes',
+        source: 'desserts',
         paint: {
             'circle-color': {
                 property: 'point_count',
                 type: 'interval',
                 stops: [
-                    [0, '#ffff00'],
-                    [10, '#ffff00'],
-                    [100, '#ffff00'],
+                    [0, 'ffff00'],
+                    [10, 'ffff00'],
+                    [100, 'ffff00'],
                 ]
             },
             'circle-radius': {
@@ -216,20 +324,71 @@ function addCafeLayers(){
                     [100, 50]
                 ]
             },
-            'circle-opacity': 0.5
+            'circle-opacity': 0.2
         }
     });
+
     map.addLayer({
-        id: 'cafe',
+        id: 'dest',
         type: 'circle',
-        source: 'cafes',
+        source: 'desserts',
         filter: ['!has', 'point_count'],
         paint: {
-            'circle-color': '#ffff00',
+            'circle-color': 'ffff00',
             'circle-radius': 6,
             'circle-stroke-width': 1,
             'circle-stroke-color': '#fff',
-            'circle-opacity': 0.5
+            'circle-opacity': 0.2
         },
     });
+}
+function addGroceryLayers(){
+
+    map.addLayer({
+        id: 'clusters_groc',
+        type: 'circle',
+        source: 'groceries',
+        paint: {
+            'circle-color': {
+                property: 'point_count',
+                type: 'interval',
+                stops: [
+                    [0, '#00F'],
+                    [10, '#00F'],
+                    [100, '#00F'],
+                ]
+            },
+            'circle-radius': {
+                property: 'point_count',
+                type: 'interval',
+                stops: [
+                    [0, 20],
+                    [10, 30],
+                    [100, 50]
+                ]
+            },
+            'circle-opacity': 0.2
+        }
+    });
+
+    map.addLayer({
+        id: 'groc',
+        type: 'circle',
+        source: 'groceries',
+        filter: ['!has', 'point_count'],
+        paint: {
+            'circle-color': '#00F',
+            'circle-radius': 6,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#fff',
+            'circle-opacity': 0.2
+        },
+    });
+}
+function addAllVendorLayers(){
+    addRestLayers();
+    addPharmLayers();
+    addCafeLayers();
+    addDessertLayers();
+    addGroceryLayers();
 }
