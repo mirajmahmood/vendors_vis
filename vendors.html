@@ -28,16 +28,11 @@
 		<option id="Health & Beauty" value="Health & Beauty">Health & Beauty</option>
 	</select>
 
-	<br>
-	<label>Total zones:</label>
-	<input></input>
 
-	<br>
-	<label>Total drivers available:</label>
-	<input></input>
 </div>
 
 <script type="text/javascript" src="vendors.js"></script>
+
 <script type="text/javascript">
 
 
@@ -49,62 +44,28 @@ var map = new mapboxgl.Map({
     zoom: 13 // starting zoom
 });
 
-function get_restaurants(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/jky2ynsxvx2nfcx24uhbjybilmpihp',
-        dataType: "text",
-        success: function(csvData) {makeRest(csvData);}
-     });
-}
-
-function get_pharms(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/mj7crve6q7a5qctnmdb23rg7biozgt',
-        dataType: "text",
-        success: function(csvData) {makePharm(csvData);}
-     });
-}
-
-function get_cafes(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/lwgwstl3krs3wk27bnkb7e7cqhbgyb',
-        dataType: "text",
-        success: function(csvData) {
-	        	makeCafe(csvData); 
-        	;}
-     });
-}
-function get_desserts(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/abgif5awfl3b2enk5tqwloki5zbovm',
-        dataType: "text",
-        success: function(csvData) {
-	        	makeDesserts(csvData); 
-        	;}
-     });
-}
-function get_grocery(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/n5qsd6cmgc3a352x6mmwek7dbia6s7',
-        dataType: "text",
-        success: function(csvData) {
-	        	makeGrocery(csvData); 
-        	;}
-     });
-}
-$(document).ready(function() {
-
+function get_vendors(){
 	get_grocery();
 	get_pharms();
 	get_cafes();
 	get_desserts();
 	get_restaurants();
-	
+
+}
+
+function get_drivers(){
+
+}
+
+function get_customers(){
+	get_num_orders();
+	get_costof_orders();
+}
+
+$(document).ready(function() {
+
+	get_vendors();
+
 });
 
 function get_cluster(value){
@@ -140,7 +101,6 @@ function get_cluster(value){
 	}
 
 }
-
 
 </script>
 </body>

@@ -1,4 +1,54 @@
 
+function get_restaurants(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/jky2ynsxvx2nfcx24uhbjybilmpihp',
+        dataType: "text",
+        success: function(csvData) {makeRest(csvData);}
+     });
+}
+
+function get_pharms(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/mj7crve6q7a5qctnmdb23rg7biozgt',
+        dataType: "text",
+        success: function(csvData) {makePharm(csvData);}
+     });
+}
+
+function get_cafes(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/lwgwstl3krs3wk27bnkb7e7cqhbgyb',
+        dataType: "text",
+        success: function(csvData) {
+                makeCafe(csvData); 
+            ;}
+     });
+}
+
+function get_desserts(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/abgif5awfl3b2enk5tqwloki5zbovm',
+        dataType: "text",
+        success: function(csvData) {
+                makeDessert(csvData); 
+            ;}
+     });
+}
+
+function get_grocery(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/n5qsd6cmgc3a352x6mmwek7dbia6s7',
+        dataType: "text",
+        success: function(csvData) {
+                makeGrocery(csvData); 
+            ;}
+     });
+}
 
 //green
 function makeRest(csvData) {
@@ -88,7 +138,7 @@ function makeCafe(csvData) {
 
 
             map.addLayer({
-                id: 'cluster-count',
+                id: 'cluster-count_cafe',
                 type: 'symbol',
                 source: 'cafes',
                 filter: ['has', 'point_count'],
@@ -122,7 +172,7 @@ function makeDessert(csvData) {
 
 
             map.addLayer({
-                id: 'cluster-count',
+                id: 'cluster-count_dest',
                 type: 'symbol',
                 source: 'desserts',
                 filter: ['has', 'point_count'],
@@ -156,7 +206,7 @@ function makeGrocery(csvData) {
 
 
             map.addLayer({
-                id: 'cluster-count',
+                id: 'cluster-count_groc',
                 type: 'symbol',
                 source: 'groceries',
                 filter: ['has', 'point_count'],
@@ -174,7 +224,7 @@ function makeGrocery(csvData) {
 //yellow
 function addCafeLayers(){
     map.addLayer({
-        id: 'clusters',
+        id: 'clusters_cafe',
         type: 'circle',
         source: 'cafes',
         paint: {
@@ -310,9 +360,9 @@ function addDessertLayers(){
                 property: 'point_count',
                 type: 'interval',
                 stops: [
-                    [0, 'ffff00'],
-                    [10, 'ffff00'],
-                    [100, 'ffff00'],
+                    [0, '#ffff00'],
+                    [10, '#ffff00'],
+                    [100, '#ffff00'],
                 ]
             },
             'circle-radius': {
@@ -334,7 +384,7 @@ function addDessertLayers(){
         source: 'desserts',
         filter: ['!has', 'point_count'],
         paint: {
-            'circle-color': 'ffff00',
+            'circle-color': '#ffff00',
             'circle-radius': 6,
             'circle-stroke-width': 1,
             'circle-stroke-color': '#fff',
