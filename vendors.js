@@ -1,55 +1,4 @@
 
-function get_restaurants(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/jky2ynsxvx2nfcx24uhbjybilmpihp',
-        dataType: "text",
-        success: function(csvData) {makeRest(csvData);}
-     });
-}
-
-function get_pharms(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/mj7crve6q7a5qctnmdb23rg7biozgt',
-        dataType: "text",
-        success: function(csvData) {makePharm(csvData);}
-     });
-}
-
-function get_cafes(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/lwgwstl3krs3wk27bnkb7e7cqhbgyb',
-        dataType: "text",
-        success: function(csvData) {
-                makeCafe(csvData); 
-            ;}
-     });
-}
-
-function get_desserts(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/abgif5awfl3b2enk5tqwloki5zbovm',
-        dataType: "text",
-        success: function(csvData) {
-                makeDessert(csvData); 
-            ;}
-     });
-}
-
-function get_grocery(){
-    $.ajax({
-        type: "GET",
-        url: 'https://query.data.world/s/n5qsd6cmgc3a352x6mmwek7dbia6s7',
-        dataType: "text",
-        success: function(csvData) {
-                makeGrocery(csvData); 
-            ;}
-     });
-}
-
 //green
 function makeRest(csvData) {
     csv2geojson.csv2geojson(csvData, {
@@ -93,30 +42,30 @@ function makePharm(csvData) {
         delimiter: ','
     }, function(err, data) {
 
-            map.addSource("pharmacies",
-                {
-                    type: "geojson",
-                    data: data,
-                    cluster: true, // Enable clustering
-                    clusterRadius: 50, // Radius of each cluster when clustering points
-                    clusterMaxZoom: 1 // Max zoom to cluster points on
-                });
-
-
-            map.addLayer({
-                id: 'cluster-count_pharm',
-                type: 'symbol',
-                source: 'pharmacies',
-                filter: ['has', 'point_count'],
-                layout: {
-                    'text-field': '{point_count}',
-                    'text-font': ['Arial'],
-                    'text-size': 12
-                }
+        map.addSource("pharmacies",
+            {
+                type: "geojson",
+                data: data,
+                cluster: true, // Enable clustering
+                clusterRadius: 50, // Radius of each cluster when clustering points
+                clusterMaxZoom: 1 // Max zoom to cluster points on
             });
-            addPharmLayers();
 
+
+        map.addLayer({
+            id: 'cluster-count_pharm',
+            type: 'symbol',
+            source: 'pharmacies',
+            filter: ['has', 'point_count'],
+            layout: {
+                'text-field': '{point_count}',
+                'text-font': ['Arial'],
+                'text-size': 12
+            }
         });
+        addPharmLayers();
+
+    });
 }
 //blue
 function makeCafe(csvData) {
@@ -220,7 +169,6 @@ function makeGrocery(csvData) {
 
         });
 }
-
 //yellow
 function addCafeLayers(){
     map.addLayer({
@@ -441,4 +389,99 @@ function addAllVendorLayers(){
     addCafeLayers();
     addDessertLayers();
     addGroceryLayers();
+}
+
+function get_cluster(value){
+    map.getStyle().layers.forEach(function(layer) {
+        if (layer.type === 'circle') {
+            map.removeLayer(layer.id);
+        }
+    });
+
+    if (value=="Restaurants"){
+
+        addRestLayers();
+    }
+    else if (value=="Pharmacy"){
+
+        addPharmLayers();
+    
+    }
+    else if (value=="Cafe & Desserts"){
+
+        addCafeLayers();
+        addDessertLayers();
+
+    }
+    else if (value=="Grocery"){
+
+        addGroceryLayers();
+    
+    }
+    else if (value=="All"){
+        addAllVendorLayers();
+
+    }
+
+}
+
+function get_restaurants(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/jky2ynsxvx2nfcx24uhbjybilmpihp',
+        dataType: "text",
+        success: function(csvData) {makeRest(csvData);}
+     });
+}
+
+function get_pharms(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/mj7crve6q7a5qctnmdb23rg7biozgt',
+        dataType: "text",
+        success: function(csvData) {makePharm(csvData);}
+     });
+}
+
+function get_cafes(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/lwgwstl3krs3wk27bnkb7e7cqhbgyb',
+        dataType: "text",
+        success: function(csvData) {
+                makeCafe(csvData); 
+            ;}
+     });
+}
+
+function get_desserts(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/abgif5awfl3b2enk5tqwloki5zbovm',
+        dataType: "text",
+        success: function(csvData) {
+                makeDessert(csvData); 
+            ;}
+     });
+}
+
+function get_grocery(){
+    $.ajax({
+        type: "GET",
+        url: 'https://query.data.world/s/n5qsd6cmgc3a352x6mmwek7dbia6s7',
+        dataType: "text",
+        success: function(csvData) {
+                makeGrocery(csvData); 
+            ;}
+     });
+}
+
+function get_vendors(){
+
+    get_grocery();
+    get_pharms();
+    get_cafes();
+    get_desserts();
+    get_restaurants();
+
 }

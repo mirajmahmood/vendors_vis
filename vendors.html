@@ -3,21 +3,65 @@
 <head>
     <meta charset='utf-8' />
     <title>Vendors by Governate</title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no'/>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+	<script src="https://d3js.org/d3-scale-chromatic.v0.3.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     <script src='csv2geojson.js'></script>
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
+
+	<script type="text/javascript" src="vendors.js"></script>
+	<script type="text/javascript" src="customers.js"></script>
+	<script type="text/javascript" src="drivers.js"></script>
+	<script type="text/javascript" src="main.js"></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
 
     <style>
         body { font-family:'Arial'; font-size:12px; margin:0; padding:0; }
-        #map { position:absolute; top:100px; bottom:0; width:80%; height: 80%  }
+        #vendor_map { position:absolute; top:100px; bottom:0; width:80%; height: 80%  }
+        #customer_map { padding-left:10px; }
+        #customers { position:absolute; top:100px; bottom:0; width:65%; height: 80%; padding:10px; }
+        #customers_bar { position:absolute; top:100px; bottom:0; left:1000px; width:80%; height: 80%; padding:10px; }
+        #customers_cost { position:absolute; top:700px; bottom:0; width:65%; height: 80%; padding:10px; }
+        #customers_title { position:absolute; top:80px; padding-left: 10px;}
+        #customers_cost_title { position:absolute; top:680px; padding-left: 10px;}
+        #customers_cost_bar { position:absolute; top:700px; bottom:0; left:1000px; width:80%; height: 80%; padding:10px; }
+        #customers_order_time { position:absolute; top:1300px; bottom:0; width:65%; height: 90%; padding:10px; }
     </style>
 </head>
 <body>
 
-<div id='map'></div>
 <div id='controls' style="padding:10px">
+	<button onclick="javascript:switch_display('vendor');"> Vendors site</button>
+	<button onclick="javascript:switch_display('customer');"> Customer site</button>
+	<button onclick="javascript:switch_display('driver');"> Driver site </button>
+</div>
+
+<div id="customer_map">
+
+	<label>Month:</label>
+	<select id='orders_month' onchange="javascript:get_customer_month(value);">
+		
+		<option id="March" value="March">March</option>
+		<option id="April" value="April">April</option>
+		<option id="May" value="May">May</option>
+		<option id="June" value="June">June</option>
+		<!-- <option id="July" value="July">July</option> -->
+	</select>
+
+	<h3 id='customers_title'> Customer Order(quantity)</h3>
+	<div id='customers'></div>
+	<div id="customers_bar"></div>
+	<h3 id='customers_cost_title'> Customer Order(cost)</h3>
+	<div id='customers_cost'></div>
+	<div id="customers_cost_bar"></div>
+
+	<div id="customers_order_time"></div>
+	<div id="customers_table"></div>
+</div>
+
+<div id='vendor_map'>
 	<label>Vendor type:</label>
 	<select id='vendor' onchange="javascript:get_cluster(value);">
 		<option id="All" value="All">All</option>
@@ -27,81 +71,95 @@
 		<option id="Cafe & Desserts" value="Cafe & Desserts">Cafe & Desserts</option>
 		<option id="Health & Beauty" value="Health & Beauty">Health & Beauty</option>
 	</select>
-
-
 </div>
 
-<script type="text/javascript" src="vendors.js"></script>
+<div id='driver_map'></div>
+
+
 
 <script type="text/javascript">
 
-
-mapboxgl.accessToken = 'pk.eyJ1Ijoibm90bWlyYWoiLCJhIjoiY2pmYzd4Nno0MXRiNzQwcTdydXNibzZtaCJ9.KwcKrFYXAQp-LqhyX-8l1Q';
-var map = new mapboxgl.Map({
-    container: 'map', // container id
-    style: 'mapbox://styles/mapbox/streets-v9', // stylesheet location
-    center: [47.990965, 29.367537], // starting position [lng, lat]
-    zoom: 13 // starting zoom
-});
-
-function get_vendors(){
-	get_grocery();
-	get_pharms();
-	get_cafes();
-	get_desserts();
-	get_restaurants();
-
-}
-
-function get_drivers(){
-
-}
-
-function get_customers(){
-	get_num_orders();
-	get_costof_orders();
-}
-
-$(document).ready(function() {
-
-	get_vendors();
-
-});
-
-function get_cluster(value){
-	map.getStyle().layers.forEach(function(layer) {
-	    if (layer.type === 'circle') {
-	        map.removeLayer(layer.id);
-	    }
+	mapboxgl.accessToken = 'pk.eyJ1Ijoibm90bWlyYWoiLCJhIjoiY2pmYzd4Nno0MXRiNzQwcTdydXNibzZtaCJ9.KwcKrFYXAQp-LqhyX-8l1Q';
+	var map = new mapboxgl.Map({
+	    container: 'vendor_map', // container id
+	    style: 'mapbox://styles/mapbox/streets-v9', // stylesheet location
+	    center: [47.990965, 29.367537], // starting position [lng, lat]
+	    zoom: 13 // starting zoom
 	});
 
-	if (value=="Restaurants"){
+	function switch_display(switch_to){
+		if (switch_to == "vendor"){
+			var driver_map = document.getElementById("driver_map");
+			var customer_map = document.getElementById("customer_map");
+			var vendor_map = document.getElementById("vendor_map");
 
-		addRestLayers();
+			driver_map.style.display = 'none';
+			customer_map.style.display = 'none';
+			vendor_map.style.display = '';
+
+			$(".customer").each(function(d) {
+                 $(this).css("display", "none");
+            });
+		}
+		else if(switch_to == "customer"){
+			var driver_map = document.getElementById("driver_map");
+			var customer_map = document.getElementById("customer_map");
+			var vendor_map = document.getElementById("vendor_map");
+
+			driver_map.style.display = 'none';
+			customer_map.style.display = '';
+			vendor_map.style.display = 'none';
+
+			$(".customer").each(function(d) {
+                 $(this).css("display", "");
+            });
+		}
+		else if(switch_to == "driver"){
+			var driver_map = document.getElementById("driver_map");
+			var customer_map = document.getElementById("customer_map");
+			var vendor_map = document.getElementById("vendor_map");
+
+			driver_map.style.display = '';
+			customer_map.style.display = 'none';
+			vendor_map.style.display = 'none';
+
+			$(".customer").each(function(d) {
+                 $(this).css("display", "none");
+            });
+		}
+		
+
 	}
-	else if (value=="Pharmacy"){
 
-		addPharmLayers();
-	
+	switch_display("customer")
+
+	var months_customer_data = {
+		"March": {
+
+			"orders": "https://query.data.world/s/e6tdhwkamycjnwev6mtjhvyug6om5n",
+			"cost": "https://query.data.world/s/csf6y4ljcvzy65euzk6wuocbl53foo",
+			"temporal": "https://query.data.world/s/iuqnvz7ca4jtcynqor3kwv2hnsn54n",
+		},
+		"April": {
+
+			"orders": "https://query.data.world/s/ppnhuidzy5rypmxhixcnex7ivgrp65",
+			"cost": "https://query.data.world/s/jxb77wcy3ci26bdcsmnhian2pvyxc2",
+			"temporal": "https://query.data.world/s/cckeacn2z4na4gvmvsa336kdezoblz",
+		},
+		"May": {
+
+			"orders": "https://query.data.world/s/binumon76auywni6rpolempwjpr5bi",
+			"cost": "https://query.data.world/s/6oi24nusuacmglwsyrewsquw4w7cw3",
+			"temporal": "https://query.data.world/s/rawvyvjdiqptvvm3pmjnofqkldmbte",
+		},
+		"June": {
+
+			"orders": "https://query.data.world/s/nvqqgkg5aiysmppxg4tsbcv2dx2llx",
+			"cost": "https://query.data.world/s/woqgr6z37hymbk4pc7mrqayvsildlp",
+			"temporal": "https://query.data.world/s/izxakvqvffetx37bw3xsxzsba5swdx",
+
+		},
 	}
-	else if (value=="Cafe & Desserts"){
-
-		addCafeLayers();
-		addDessertLayers();
-
-	}
-	else if (value=="Grocery"){
-
-		addGroceryLayers();
-	
-	}
-	else if (value=="All"){
-		addAllVendorLayers();
-
-	}
-
-}
-
 </script>
 </body>
 </html>
