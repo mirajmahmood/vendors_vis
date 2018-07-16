@@ -2,7 +2,7 @@
 
 function initialise(errors, kwtData, ordersJson, costJson){
 
-	get_vendors();
+	//get_vendors();
 	get_customers(kwtData, ordersJson, costJson);
 	get_drivers();
 	
