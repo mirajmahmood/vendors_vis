@@ -451,7 +451,7 @@ function get_cafes(){
         dataType: "text",
         success: function(csvData) {
                 makeCafe(csvData); 
-            ;}
+            }
      });
 }
 
@@ -462,7 +462,7 @@ function get_desserts(){
         dataType: "text",
         success: function(csvData) {
                 makeDessert(csvData); 
-            ;}
+            }
      });
 }
 
@@ -473,7 +473,7 @@ function get_grocery(){
         dataType: "text",
         success: function(csvData) {
                 makeGrocery(csvData); 
-            ;}
+            }
      });
 }
 
