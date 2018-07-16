@@ -108,14 +108,14 @@ function plot_graph(kwtData, jsonData, divId){
 	        .attr("height", function(d,i) { return ((height - y(jsonData[d]))/1.15) + 30; })
 	        .attr("class", "bar")
 	        .attr("id", function(d, i){
-	        	console.log(ticks[i]);
+	        	
 	        	return d+divId;
 	        })
 	        .attr("fill", function(d,i){ return z(jsonData[d])})
 	        .style("stroke-width", 0.5)
 	        .style('stroke', "#000");
 
-console.log("here")
+
 
 	svg_bar.selectAll("rect")
     	.on('mouseover', function(d, i) {
@@ -262,7 +262,6 @@ function get_customers(kwtData, ordersJson, costJson){
 	plot_graph(kwtData, ordersJson, "customers");
 	plot_graph(kwtData, costJson, "customers_cost");
 	create_temporal_graph("customers_order_time", months_customer_data['March']['temporal']);
-	//create_customer_table("customers_table");
 }
 
 function get_customer_month(month){
@@ -284,7 +283,6 @@ function get_customer_month(month){
 				plot_graph(kwtData, ordersJson, "customers");
 				plot_graph(kwtData, costJson, "customers_cost");
 				create_temporal_graph("customers_order_time", months_customer_data[month]['temporal']);
-				//create_customer_table("customers_table");
 			})
 		})
 	})
@@ -295,32 +293,29 @@ function create_temporal_graph(divId, temporal_url){
 	
 	d3.json(temporal_url, function(errors, jsonData){
 		
-	
-		// set the dimensions and margins of the graph
 		var margin = {top: 20, right: 20, bottom: 30, left: 50},
 	    	width = 1300,
 			height = 300;
 
-		// The number of datapoints
+		
 		var n = 24;
 
-		// 5. X scale will use the index of our data
+		
 		var xScale = d3.scaleLinear()
-		    .domain([1, n]) // input
-		    .range([0, width]); // output
+		    .domain([1, n]) 
+		    .range([0, width]); 
 
 		
 		var yScale = d3.scaleLinear()
-		    .domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))]) // input 
-		    .range([height, 0]); // output 
+		    .domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))]) 
+		    .range([height, 0]); 
 
-		// 7. d3's line generator
 		var line = d3.line()
-		    .x(function(d, i) { return xScale(i+1); }) // set the x values for the line generator
-		    .y(function(d) { return yScale(d.y); }) // set the y values for the line generator 
-		    .curve(d3.curveMonotoneX) // apply smoothing to the line
+		    .x(function(d, i) { return xScale(i+1); }) 
+		    .y(function(d) { return yScale(d.y); }) 
+		    .curve(d3.curveMonotoneX) 
 
-		// 8. An array of objects of length N. Each object has key -> value pair, the key being "y" and the value is a random number
+		
 		var dataset = d3.range(n).map(function(d, i) { 
 		
 			if (jsonData[d]==null){
@@ -335,17 +330,13 @@ function create_temporal_graph(divId, temporal_url){
 
 		})
 	
-	
-		// 1. Add the SVG to the page and employ #2
+		
 		var svg = d3.select("#"+divId).append("svg")
 		    .attr("width", width + margin.left + margin.right)
 		    .attr("height", height + margin.top + margin.bottom)
 		  .append("g")
 		    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		// 3. Call the x axis in a group tag
-
-		// text label for the x axis
 		svg.append("text")             
 		  .attr("transform",
 		        "translate(" + (width/2) + " ," + 
@@ -356,8 +347,8 @@ function create_temporal_graph(divId, temporal_url){
 		svg.append("g")
 		    .attr("class", "x axis")
 		    .attr("transform", "translate(0," + height + ")")
-		    .call(d3.axisBottom(xScale)); // Create an axis component with d3.axisBottom
-		// text label for the y axis
+		    .call(d3.axisBottom(xScale)); 
+
 	  svg.append("text")
 	      .attr("transform", "rotate(-90)")
 	      .attr("y", 0 - margin.left)
@@ -365,74 +356,19 @@ function create_temporal_graph(divId, temporal_url){
 	      .attr("dy", "1em")
 	      .style("text-anchor", "middle")
 	      .text("Num of Orders"); 
-		// 4. Call the y axis in a group tag
 		svg.append("g")
 		    .attr("class", "y axis")
-		    .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+		    .call(d3.axisLeft(yScale)); 
 
-		// 9. Append the path, bind the data, and call the line generator 
 		svg.append("path")
-		    .datum(dataset) // 10. Binds data to the line 
-		    .attr("class", "line") // Assign a class for styling 
-		    .attr("d", line) // 11. Calls the line generator 
+		    .datum(dataset) 
+		    .attr("class", "line") 
+		    .attr("d", line) 
 		    .attr("stroke-width", "3")
 			.attr("fill", "none")
 			.attr("stroke", "#ffab00");
 
-		
 		});
 }
-// function create_customer_table(divId, ordersJson, costJson){
-// 	function tabulate(ordersJson, costJson, columns){
-// 	    var table = d3.select("body").append("table")
-// 	            .attr("style", "margin-left: 200px")
-// 	            .style("border-collapse", "collapse")// <= Add this line in
-// 	            .style("border", "2px black solid"), // <= Add this line in
-// 	        thead = table.append("thead"),
-// 	        tbody = table.append("tbody");
 
-// 	    // append the header row
-// 	    thead.append("tr")
-// 	        .selectAll("th")
-// 	        .data(columns)
-// 	        .enter()
-// 	        .append("th")
-// 	            .text(function(column) { return column; });
-
-// 	    // create a row for each object in the data
-// 	    var rows = tbody.selectAll("tr")
-// 	        .data(Object.keys(ordersJson))
-// 	        .enter()
-// 	        .append("tr");
-
-// 	    // create a cell in each row for each column
-// 	    var cells = rows.selectAll("td")
-// 	        .data(function(row) {
-// 	            return columns.map(function(column) {
-// 	                return {column: column, value: row[column]};
-// 	            });
-// 	        })
-// 	        .enter()
-// 	        .append("td")
-// 	        .attr("style", "font-family: Courier") // sets the font style
-// 	            .html(function(d) { return d.value; });
-	    
-// 	    return table;
-// 	}
-
-// 	// render the table
-// 	var peopleTable = tabulate(ordersJson, costJson, ["Area", "Number of Orders", "Total Cost"]);
-
-// 	peopleTable.selectAll("tbody tr") 
-// 	        .sort(function(a, b) {
-// 	                return d3.descending(a.close, b.close);
-// 	        });
-
-// 	peopleTable.selectAll("thead th")
-// 	        .text(function(column) {
-// 	                return column.charAt(0).toUpperCase()+column.substr(1);
-// 	        });
-
-
-// }
 
