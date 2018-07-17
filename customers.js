@@ -49,8 +49,9 @@ function change_bar_data(jsonData, divId){
         .domain([0, d3.max(d3.values(jsonData))]).nice(8)
         .range([height, 0]);
 
-	var svg = d3.select("#"+divId).selectAll(".bar")	
+	var svg = d3.select("#"+divId).selectAll("rect")	
 				.attr("fill", function(d) {
+					console.log(jsonData)
 			    	if (jsonData[d]){ 
 
 			    		return z(jsonData[d]) 
@@ -61,7 +62,7 @@ function change_bar_data(jsonData, divId){
 			    .attr("x", (d,i) => x(ticks[i])/3.5)
 		        .attr("y", (d, i) => (y(jsonData[d])/1.15) + 15)
 		        .attr("width", 10)
-		        .attr("height", function(d,i) { return ((height - y(jsonData[d]))/1.15) + 30; })
+		        .attr("height", function(d,i) { return ((height - y(jsonData[d]))/1.15) + 15; })
 }
 
 function plot_graph(kwtData, jsonData, divId, map){
