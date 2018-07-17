@@ -1,5 +1,70 @@
+function lay_map(divId){
 
-function plot_graph(kwtData, jsonData, divId){
+	mapboxgl.accessToken = 'pk.eyJ1Ijoibm90bWlyYWoiLCJhIjoiY2pmYzd4Nno0MXRiNzQwcTdydXNibzZtaCJ9.KwcKrFYXAQp-LqhyX-8l1Q';
+	var map = new mapboxgl.Map({
+	    container: divId, // container id
+	    style: 'mapbox://styles/mapbox/streets-v9',
+	    center: [48.02398, 29.331], // starting position
+	    zoom: 11.5, // starting zoom
+	    zIndex: 1
+		});
+
+	map.scrollZoom.disable()
+	map.addControl(new mapboxgl.NavigationControl());
+
+	return map
+}
+function change_map_data(jsonData, divId){
+	var z = d3.scaleSequential(d3["interpolate" + "BuPu"]);
+
+	z.domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))])
+
+	var svg = d3.select("#"+divId).selectAll("path")	
+				.attr("fill", function(d) {
+			    	if (jsonData[d.properties.name]){ 
+
+			    		return z(jsonData[d.properties.name]) 
+			    	}
+			    	else 
+			    		return "#fff"
+			    });
+}
+
+function change_bar_data(jsonData, divId){
+
+	var width = 1300,
+		height = 600
+		z = d3.scaleSequential(d3["interpolate" + "BuPu"]);
+
+	z.domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))])
+	var num_ticks = d3.values(jsonData).length
+
+	var x = d3.scaleLinear()
+		.domain([0, d3.values(jsonData).length]).nice(num_ticks)
+        .rangeRound([0, width]);
+
+    var ticks = x.ticks(num_ticks);
+
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(d3.values(jsonData))]).nice(8)
+        .range([height, 0]);
+
+	var svg = d3.select("#"+divId).selectAll(".bar")	
+				.attr("fill", function(d) {
+			    	if (jsonData[d]){ 
+
+			    		return z(jsonData[d]) 
+			    	}
+			    	else 
+			    		return "#fff"
+			    })
+			    .attr("x", (d,i) => x(ticks[i])/3.5)
+		        .attr("y", (d, i) => (y(jsonData[d])/1.15) + 15)
+		        .attr("width", 10)
+		        .attr("height", function(d,i) { return ((height - y(jsonData[d]))/1.15) + 30; })
+}
+
+function plot_graph(kwtData, jsonData, divId, map){
 	var total_num = 0
 
 	Object.keys(jsonData).forEach(function(key) {
@@ -7,34 +72,20 @@ function plot_graph(kwtData, jsonData, divId){
 	});
 
 
-
 	var width = 1300,
 		height = 600
 		z = d3.scaleSequential(d3["interpolate" + "BuPu"]);
 
 	z.domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))])
-	
-
-	mapboxgl.accessToken = 'pk.eyJ1Ijoibm90bWlyYWoiLCJhIjoiY2pmYzd4Nno0MXRiNzQwcTdydXNibzZtaCJ9.KwcKrFYXAQp-LqhyX-8l1Q';
-		var map = new mapboxgl.Map({
-	    container: divId, // container id
-	    style: 'mapbox://styles/mapbox/streets-v9',
-	    center: [48.02398, 29.331], // starting position
-	    zoom: 11.5 // starting zoom
-		});
-
-	map.scrollZoom.disable()
-	map.addControl(new mapboxgl.NavigationControl());
-
 	var center = map.getCenter();
 	var zoom = map.getZoom();
 	var scale = (512) * 0.5 / Math.PI * Math.pow(2, zoom);
-
+	
 	var projection = d3.geoConicConformal().rotate([-48.02398, 29.331]).center([center['lng'], center['lat']]).fitSize([width, height], kwtData);
 						
 	var path = d3.geoPath().projection(projection);
-
 	var map_container = map.getCanvasContainer();
+
 	var svg = d3.select(map_container).append("svg")
 	  .attr("width", width)
 	  .attr("height", height)
@@ -60,7 +111,7 @@ function plot_graph(kwtData, jsonData, divId){
 	var tool_tip = d3.tip()
 		.attr("class", "d3-tip")
 		.offset([0, 40])
-		.html("<div id='mySVGtooltip"+divId+"'></div>");
+		.html("<div id='mySVGtooltip'></div>");
 
 	svg.call(tool_tip);
 	
@@ -88,15 +139,15 @@ function plot_graph(kwtData, jsonData, divId){
         .domain([0, d3.max(d3.values(jsonData))]).nice(8)
         .range([height, 0]);
 
-	var svg_bar = d3.select("#"+divId+"_bar").append("svg")
+	var svg_bar = d3.select("#customer_bar").append("svg")
 				.attr("width", width)
 				.attr("height", height)
 				.append("g");
 	
 	var tool_tip_bar = d3.tip()
 		.attr("class", "d3-tip")
-		.offset([0, 40])
-		.html("<div id='mySVGtooltip"+divId+"_bar' class='customer'></div>");
+		.offset([0, -180])
+		.html("<div id='mySVGtooltip_bar' class='customer'></div>");
 
 	svg_bar.call(tool_tip_bar);
 	
@@ -119,7 +170,7 @@ function plot_graph(kwtData, jsonData, divId){
 
 	svg_bar.selectAll("rect")
     	.on('mouseover', function(d, i) {
-    		
+    		console.log(d+divId)
     		d3.select(this)
     			.style("stroke-width", 2)
     			.style('stroke', "#000");
@@ -129,7 +180,7 @@ function plot_graph(kwtData, jsonData, divId){
 				tool_tip_bar_h = 70;
 		
 
-			var tooltipbarSVG = d3.select("#mySVGtooltip"+divId+"_bar")
+			var tooltipbarSVG = d3.select("#mySVGtooltip_bar")
 				.append("svg")
 				.attr("width", tool_tip_bar_w)
 				.attr("height", tool_tip_bar_h)
@@ -180,7 +231,19 @@ function plot_graph(kwtData, jsonData, divId){
     		
     		d3.select(this)
     			.style("stroke-width", 0.5);
-    		});
+
+    		tool_tip_bar.hide();
+
+    		svg.selectAll("path")
+			    .attr("fill-opacity", function(di){
+			    	return 0.6
+			    })
+
+			    .attr("stroke-width", function(di){
+			    	return "0.6"
+			    })
+
+    	});
     	
 
 /////////
@@ -201,7 +264,7 @@ function plot_graph(kwtData, jsonData, divId){
 								tool_tip_bar_h = 70;
 						
 
-							var tooltipbarSVG = d3.select("#mySVGtooltip"+divId+"_bar")
+							var tooltipbarSVG = d3.select("#mySVGtooltip_bar")
 								.append("svg")
 								.attr("width", tool_tip_bar_w)
 								.attr("height", tool_tip_bar_h)
@@ -240,6 +303,12 @@ function plot_graph(kwtData, jsonData, divId){
     		d3.select(this)
     			.attr("fill-opacity", 0.6)
 			    .attr("stroke-width", "0.6")
+
+			tool_tip_bar.hide();
+			svg_bar.selectAll("rect")
+    				.style("stroke-width", function(d){
+    					return 0.5
+    				})
     	});
 	function render_overlay(){
 
@@ -255,38 +324,6 @@ function plot_graph(kwtData, jsonData, divId){
 	}
 
 
-
-}
-function get_customers(kwtData, ordersJson, costJson){
-
-	plot_graph(kwtData, ordersJson, "customers");
-	plot_graph(kwtData, costJson, "customers_cost");
-	create_temporal_graph("customers_order_time", months_customer_data['March']['temporal']);
-}
-
-function get_customer_month(month){
-	var urls = months_customer_data[month]
-	var kwtData_url = "https://query.data.world/s/dk5r7fnrj4fmvstrw2abu66sp3vtym"
-	d3.json(kwtData_url, function(errors, kwtData){
-		d3.json(urls['cost'], function(errors, costJson){
-			d3.json(urls['orders'], function(errors, ordersJson){
-				
-				document.getElementById("customers").innerHTML = "";
-				document.getElementById("customers_cost").innerHTML = "";
-				document.getElementById("customers_bar").innerHTML = "";
-				document.getElementById("customers_cost_bar").innerHTML = "";
-				document.getElementById("customers_order_time").innerHTML = "";
-
-				$(".customer").each(function(d) {
-	                $(this).remove();
-	            });
-				plot_graph(kwtData, ordersJson, "customers");
-				plot_graph(kwtData, costJson, "customers_cost");
-				create_temporal_graph("customers_order_time", months_customer_data[month]['temporal']);
-			})
-		})
-	})
-	
 }
 
 function create_temporal_graph(divId, temporal_url){
@@ -299,11 +336,14 @@ function create_temporal_graph(divId, temporal_url){
 
 		
 		var n = 24;
-
+		x_data = Array.apply(null, {length: n}).map((d,i) => i+1)
 		
-		var xScale = d3.scaleLinear()
-		    .domain([1, n]) 
-		    .range([0, width]); 
+		var parseTime = d3.timeParse("%H");
+
+		var xScale = d3.scaleTime()
+		    .domain(d3.extent(x_data, function(d) { return parseTime(d) }))
+		    .range([0, width])
+		    .nice(); 
 
 		
 		var yScale = d3.scaleLinear()
@@ -311,7 +351,7 @@ function create_temporal_graph(divId, temporal_url){
 		    .range([height, 0]); 
 
 		var line = d3.line()
-		    .x(function(d, i) { return xScale(i+1); }) 
+		    .x(function(d, i){return xScale(parseTime(x_data[i])) }) 
 		    .y(function(d) { return yScale(d.y); }) 
 		    .curve(d3.curveMonotoneX) 
 
@@ -347,7 +387,8 @@ function create_temporal_graph(divId, temporal_url){
 		svg.append("g")
 		    .attr("class", "x axis")
 		    .attr("transform", "translate(0," + height + ")")
-		    .call(d3.axisBottom(xScale)); 
+		    .call(d3.axisBottom(xScale)
+    			.tickFormat(d3.timeFormat('%H:%M')));
 
 	  svg.append("text")
 	      .attr("transform", "rotate(-90)")
@@ -368,7 +409,103 @@ function create_temporal_graph(divId, temporal_url){
 			.attr("fill", "none")
 			.attr("stroke", "#ffab00");
 
+		var tool_tip_line = d3.tip()
+			.attr("class", "d3-tip")
+			.offset([0, 40])
+			.html("<div id='mySVGtooltip"+divId+"_line' class='customer'></div>");
+
+		var focus = svg.append("g")
+			  .attr("class", "focus")
+			  .style("display", "none");
+
+		focus.append("circle")
+		  .attr("r", 4.5);
+
+		focus.append("text")
+		  .attr("x", 9)
+		  .attr("dy", ".35em");
+
+		svg.selectAll(".line").call(tool_tip_line)
+
+		var formatDate = d3.timeFormat("%H:%M")
+
+		svg.selectAll(".line")
+	    	.on('mouseover', function(di, i) {
+	    		var time = xScale.invert(d3.mouse(this)[0])
+	    		console.log(formatDate(time));
+	    		console.log(yScale.invert(d3.mouse(this)[1]));
+				tool_tip_line.show();
+					var tool_tip_line_w = 100,
+						tool_tip_line_h = 50;
+				
+
+					var tooltiplineSVG = d3.select("#mySVGtooltip"+divId+"_line")
+						.append("svg")
+						.attr("width", tool_tip_line_w)
+						.attr("height", tool_tip_line_h);
+
+					tooltiplineSVG.append("text")
+							.attr("x", 5)
+							.attr("y", 20)
+							.attr("dy", ".35em")
+							.style("fill", "black")
+							.style('font-size', 11)
+							.text("\nTime:"+formatDate(time));
+
+					tooltiplineSVG.append("text")
+							.attr("x", 5)
+							.attr("y", 30)
+							.attr("dy", ".35em")
+							.style("fill", "black")
+							.style('font-size', 11)
+							.text("\nOrders: "+yScale.invert(d3.mouse(this)[1]).toFixed(1));
+
+
+
+	    		
+	    	});
+
 		});
+
+	
+
+
 }
+
+function get_customer_month(month){
+	var urls = months_customer_data[month]
+	var kwtData_url = "https://query.data.world/s/dk5r7fnrj4fmvstrw2abu66sp3vtym"
+	d3.json(kwtData_url, function(errors, kwtData){
+		d3.json(urls['cost'], function(errors, costJson){
+			d3.json(urls['orders'], function(errors, ordersJson){
+				
+				document.getElementById("order_num").innerHTML = "";
+				document.getElementById("total_revenue").innerHTML = "";
+
+				document.getElementById("order_num_bar").innerHTML = "";
+				document.getElementById("total_revenue_bar").innerHTML = "";
+
+				document.getElementById("customers_order_time").innerHTML = "";
+
+				$(".customer").each(function(d) {
+	                $(this).remove();
+	            });
+				plot_graph(kwtData, ordersJson, "order_num");
+				plot_graph(kwtData, costJson, "total_revenue");
+				create_temporal_graph("customers_order_time", months_customer_data[month]['temporal']);
+			})
+		})
+	})
+	
+}
+
+function get_customers(kwtData, ordersJson, costJson){
+
+	var map = lay_map("customer_heat_map");
+	plot_graph(kwtData, ordersJson, "customer", map);
+	//plot_graph(kwtData, costJson, "total_revenue", map);
+	create_temporal_graph("customers_order_time", months_customer_data['March']['temporal']);
+}
+
 
 

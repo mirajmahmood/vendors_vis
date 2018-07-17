@@ -20,15 +20,30 @@
 
     <style>
         body { font-family:'Arial'; font-size:12px; margin:0; padding:0; }
+        
+        html, body {
+		    max-width: 100%;
+		    overflow-x: hidden;
+		}
         #vendor_map { position:absolute; top:100px; bottom:0; width:80%; height: 80%  }
         #customer_map { padding-left:10px; }
-        #customers { position:absolute; top:100px; bottom:0; width:65%; height: 80%; padding:10px; }
-        #customers_bar { position:absolute; top:100px; bottom:0; left:1000px; width:80%; height: 80%; padding:10px; }
-        #customers_cost { position:absolute; top:700px; bottom:0; width:65%; height: 80%; padding:10px; }
-        #customers_title { position:absolute; top:80px; padding-left: 10px;}
-        #customers_cost_title { position:absolute; top:680px; padding-left: 10px;}
-        #customers_cost_bar { position:absolute; top:700px; bottom:0; left:1000px; width:80%; height: 80%; padding:10px; }
-        #customers_order_time { position:absolute; top:1300px; bottom:0; width:65%; height: 90%; padding:10px; }
+        #customer_heat_map { position:absolute; top:100px; bottom:0; width:50%; height: 80%; padding:10px; }
+        #customer_bar { position:absolute; top:100px; bottom:0; left:900px; width:80%; height: 80%; padding:10px; }
+
+        #order_num { position:absolute; top:100px; bottom:0; width:50%; height: 80%; padding:10px; }
+        #order_num_bar { position:absolute; top:100px; bottom:0; left:900px; width:80%; height: 80%; padding:10px; }
+
+        #total_revenue { position:absolute; top:100px; left:20px; bottom:0; width:50%; height: 80%; padding:10px; }
+        #total_revenue_bar { position:absolute; top:100px; bottom:0; left:900px; width:80%; height: 80%; padding:10px; }
+
+        #basket_size { position:absolute; top:100px; bottom:0; width:50%; height: 80%; padding:10px; }
+        #basket_size_bar { position:absolute; top:100px; bottom:0; left:900px; width:80%; height: 80%; padding:10px; }
+
+        #order_num_title {padding-left: 10px;}
+        #total_revenue_title {padding-left: 10px;}
+        #basket_title {padding-left: 10px;}
+
+        #customers_order_time { position:absolute; top:700px; bottom:0; width:65%; height: 90%; padding:10px; }
     </style>
 </head>
 <body>
@@ -51,12 +66,20 @@
 		<!-- <option id="July" value="July">July</option> -->
 	</select>
 
-	<h3 id='customers_title'> Customer Order(quantity)</h3>
-	<div id='customers'></div>
-	<div id="customers_bar"></div>
-	<h3 id='customers_cost_title'> Customer Order(cost)</h3>
-	<div id='customers_cost'></div>
-	<div id="customers_cost_bar"></div>
+	<label>Map Type:</label>
+	<select id='customer_map_type' onchange="javascript:switch_customer_map_type(value);">
+		
+		<option id="order_num_option" value="order_num" >Number of Orders</option>
+		<option id="basket_size_option" value="basket_size" >Basket Size</option>
+		<option id="total_revenue_option" value="total_revenue" >Total Revenue</option>
+		
+	</select>
+
+	<h3 id='customer_title'> Number of Orders</h3>
+	<div id='customer_heat_map'></div>
+
+	<div id='customer_bar'></div>
+	
 
 	<div id="customers_order_time"></div>
 	<div id="customers_table"></div>
@@ -79,9 +102,40 @@
 
 
 <script type="text/javascript">
+	var months_customer_data = {
+		"March": {
+
+			"orders": "https://query.data.world/s/e6tdhwkamycjnwev6mtjhvyug6om5n",
+			"cost": "https://query.data.world/s/csf6y4ljcvzy65euzk6wuocbl53foo",
+			"temporal": "https://query.data.world/s/iuqnvz7ca4jtcynqor3kwv2hnsn54n",
+			"basket_size": "https://query.data.world/s/7e2flof2gxxdpdbtfbxbxvu4hpknbh",
+		},
+		"April": {
+
+			"orders": "https://query.data.world/s/ppnhuidzy5rypmxhixcnex7ivgrp65",
+			"cost": "https://query.data.world/s/jxb77wcy3ci26bdcsmnhian2pvyxc2",
+			"temporal": "https://query.data.world/s/cckeacn2z4na4gvmvsa336kdezoblz",
+			"basket_size": "https://query.data.world/s/wehqj5bslr2oejloow3oqjvltebgp3",
+		},
+		"May": {
+
+			"orders": "https://query.data.world/s/binumon76auywni6rpolempwjpr5bi",
+			"cost": "https://query.data.world/s/6oi24nusuacmglwsyrewsquw4w7cw3",
+			"temporal": "https://query.data.world/s/rawvyvjdiqptvvm3pmjnofqkldmbte",
+			"basket_size": "https://query.data.world/s/xz5hrztdmjgnzqhhg72mc2bc4uyk5g",
+		},
+		"June": {
+
+			"orders": "https://query.data.world/s/nvqqgkg5aiysmppxg4tsbcv2dx2llx",
+			"cost": "https://query.data.world/s/woqgr6z37hymbk4pc7mrqayvsildlp",
+			"temporal": "https://query.data.world/s/izxakvqvffetx37bw3xsxzsba5swdx",
+			"basket_size": "https://query.data.world/s/mhalkrcry4c6nx5f745df7tmsx3wpo",
+
+		},
+	};
 
 	mapboxgl.accessToken = 'pk.eyJ1Ijoibm90bWlyYWoiLCJhIjoiY2pmYzd4Nno0MXRiNzQwcTdydXNibzZtaCJ9.KwcKrFYXAQp-LqhyX-8l1Q';
-	var map = new mapboxgl.Map({
+	var map_vendor = new mapboxgl.Map({
 	    container: 'vendor_map', // container id
 	    style: 'mapbox://styles/mapbox/streets-v9', // stylesheet location
 	    center: [47.990965, 29.367537], // starting position [lng, lat]
@@ -132,35 +186,42 @@
 
 	}
 
+	function switch_customer_map_type(switch_to){
+
+
+		var customer_title = document.getElementById("customer_title");
+		var month = document.getElementById("orders_month").value
+		var url = ""
+
+		if (switch_to == "order_num"){
+			customer_title.innerText = "Number of Orders";
+			url = months_customer_data[month]['orders']
+
+		}
+		else if(switch_to == "basket_size"){
+			customer_title.innerText = "Basket Size";
+			url = months_customer_data[month]['basket_size']
+
+		}
+		else if(switch_to == "total_revenue"){
+			customer_title.innerText = "Total Revenue";
+			url = months_customer_data[month]['cost']
+
+		}
+		var kwtData_url = "https://query.data.world/s/dk5r7fnrj4fmvstrw2abu66sp3vtym"
+		d3.json(kwtData_url, function(errors, kwtData){
+			d3.json(url, function(errors, jsonData){
+					change_map_data(jsonData, "customer_heat_map");
+					change_bar_data(jsonData, "customer_bar");
+				})
+		})
+
+	}
+
+
+
 	switch_display("customer");
-
-	var months_customer_data = {
-		"March": {
-
-			"orders": "https://query.data.world/s/e6tdhwkamycjnwev6mtjhvyug6om5n",
-			"cost": "https://query.data.world/s/csf6y4ljcvzy65euzk6wuocbl53foo",
-			"temporal": "https://query.data.world/s/iuqnvz7ca4jtcynqor3kwv2hnsn54n",
-		},
-		"April": {
-
-			"orders": "https://query.data.world/s/ppnhuidzy5rypmxhixcnex7ivgrp65",
-			"cost": "https://query.data.world/s/jxb77wcy3ci26bdcsmnhian2pvyxc2",
-			"temporal": "https://query.data.world/s/cckeacn2z4na4gvmvsa336kdezoblz",
-		},
-		"May": {
-
-			"orders": "https://query.data.world/s/binumon76auywni6rpolempwjpr5bi",
-			"cost": "https://query.data.world/s/6oi24nusuacmglwsyrewsquw4w7cw3",
-			"temporal": "https://query.data.world/s/rawvyvjdiqptvvm3pmjnofqkldmbte",
-		},
-		"June": {
-
-			"orders": "https://query.data.world/s/nvqqgkg5aiysmppxg4tsbcv2dx2llx",
-			"cost": "https://query.data.world/s/woqgr6z37hymbk4pc7mrqayvsildlp",
-			"temporal": "https://query.data.world/s/izxakvqvffetx37bw3xsxzsba5swdx",
-
-		},
-	};
+	switch_customer_map_type("order_num");
 </script>
 </body>
 </html>

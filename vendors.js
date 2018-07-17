@@ -1,5 +1,5 @@
 function addRestLayers(){
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'clusters_rest',
         type: 'circle',
         source: 'restaurants',
@@ -27,7 +27,7 @@ function addRestLayers(){
     });
 
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'restaurant',
         type: 'circle',
         source: 'restaurants',
@@ -43,7 +43,7 @@ function addRestLayers(){
 }
 function addPharmLayers(){
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'clusters_pharm',
         type: 'circle',
         source: 'pharmacies',
@@ -70,7 +70,7 @@ function addPharmLayers(){
         }
     });
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'pharms',
         type: 'circle',
         source: 'pharmacies',
@@ -86,7 +86,7 @@ function addPharmLayers(){
 }
 function addDessertLayers(){
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'clusters_dest',
         type: 'circle',
         source: 'desserts',
@@ -113,7 +113,7 @@ function addDessertLayers(){
         }
     });
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'dest',
         type: 'circle',
         source: 'desserts',
@@ -129,7 +129,7 @@ function addDessertLayers(){
 }
 function addGroceryLayers(){
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'clusters_groc',
         type: 'circle',
         source: 'groceries',
@@ -156,7 +156,7 @@ function addGroceryLayers(){
         }
     });
 
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'groc',
         type: 'circle',
         source: 'groceries',
@@ -172,7 +172,7 @@ function addGroceryLayers(){
 }
 //yellow
 function addCafeLayers(){
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'clusters_cafe',
         type: 'circle',
         source: 'cafes',
@@ -198,7 +198,7 @@ function addCafeLayers(){
             'circle-opacity': 0.5
         }
     });
-    map.addLayer({
+    map_vendor.addLayer({
         id: 'cafe',
         type: 'circle',
         source: 'cafes',
@@ -219,9 +219,9 @@ function makeRest(csvData) {
         lonfield: 'longitude',
         delimiter: ','
     }, function(err, data) {
-	map.on('load',
+	map_vendor.on('load',
         () => {
-            map.addSource("restaurants",
+            map_vendor.addSource("restaurants",
                 {
                     type: "geojson",
                     data: data,
@@ -230,7 +230,7 @@ function makeRest(csvData) {
                     clusterMaxZoom: 1 // Max zoom to cluster points on
                 });
 
-            map.addLayer({
+            map_vendor.addLayer({
                 id: 'cluster-count_rest',
                 type: 'symbol',
                 source: 'restaurants',
@@ -255,7 +255,7 @@ function makePharm(csvData) {
         delimiter: ','
     }, function(err, data) {
 
-        map.addSource("pharmacies",
+        map_vendor.addSource("pharmacies",
             {
                 type: "geojson",
                 data: data,
@@ -265,7 +265,7 @@ function makePharm(csvData) {
             });
 
 
-        map.addLayer({
+        map_vendor.addLayer({
             id: 'cluster-count_pharm',
             type: 'symbol',
             source: 'pharmacies',
@@ -289,7 +289,7 @@ function makeCafe(csvData) {
         delimiter: ','
     }, function(err, data) {
 
-            map.addSource("cafes",
+            map_vendor.addSource("cafes",
                 {
                     type: "geojson",
                     data: data,
@@ -299,7 +299,7 @@ function makeCafe(csvData) {
                 });
 
 
-            map.addLayer({
+            map_vendor.addLayer({
                 id: 'cluster-count_cafe',
                 type: 'symbol',
                 source: 'cafes',
@@ -323,7 +323,7 @@ function makeDessert(csvData) {
         delimiter: ','
     }, function(err, data) {
 
-            map.addSource("desserts",
+            map_vendor.addSource("desserts",
                 {
                     type: "geojson",
                     data: data,
@@ -333,7 +333,7 @@ function makeDessert(csvData) {
                 });
 
 
-            map.addLayer({
+            map_vendor.addLayer({
                 id: 'cluster-count_dest',
                 type: 'symbol',
                 source: 'desserts',
@@ -357,7 +357,7 @@ function makeGrocery(csvData) {
         delimiter: ','
     }, function(err, data) {
 
-            map.addSource("groceries",
+            map_vendor.addSource("groceries",
                 {
                     type: "geojson",
                     data: data,
@@ -367,7 +367,7 @@ function makeGrocery(csvData) {
                 });
 
 
-            map.addLayer({
+            map_vendor.addLayer({
                 id: 'cluster-count_groc',
                 type: 'symbol',
                 source: 'groceries',
@@ -393,9 +393,9 @@ function addAllVendorLayers(){
 }
 
 function get_cluster(value){
-    map.getStyle().layers.forEach(function(layer) {
+    map_vendor.getStyle().layers.forEach(function(layer) {
         if (layer.type === 'circle') {
-            map.removeLayer(layer.id);
+            map_vendor.removeLayer(layer.id);
         }
     });
 
