@@ -57,7 +57,7 @@
 <div id="customer_map">
 
 	<label>Month:</label>
-	<select id='orders_month' onchange="javascript:get_customer_month(value);">
+	<select id='orders_month' onchange="javascript:switch_customer_month();">
 		
 		<option id="March" value="March">March</option>
 		<option id="April" value="April">April</option>
@@ -211,17 +211,56 @@
 		var kwtData_url = "https://query.data.world/s/dk5r7fnrj4fmvstrw2abu66sp3vtym"
 		d3.json(kwtData_url, function(errors, kwtData){
 			d3.json(url, function(errors, jsonData){
-					change_map_data(jsonData, "customer_heat_map");
-					change_bar_data(jsonData, "customer_bar");
+					update_map_data(jsonData, "customer_heat_map");
+					update_bar_data(jsonData, "customer_bar");
 				})
 		})
 
 	}
 
 
+	function switch_customer_month(){
 
+		var month = document.getElementById("orders_month").value
+		var switch_to = document.getElementById("customer_map_type").value
+		var url = ""
+		var temporal_url = ""
+		if (switch_to == "order_num"){
+			customer_title.innerText = "Number of Orders";
+			url = months_customer_data[month]['orders']
+			temporal_url = months_customer_data[month]['temporal']
+
+		}
+		else if(switch_to == "basket_size"){
+			customer_title.innerText = "Basket Size";
+			url = months_customer_data[month]['basket_size']
+			temporal_url = months_customer_data[month]['temporal']
+
+		}
+		else if(switch_to == "total_revenue"){
+			customer_title.innerText = "Total Revenue";
+			url = months_customer_data[month]['cost']
+			temporal_url = months_customer_data[month]['temporal']
+
+		}
+		var kwtData_url = "https://query.data.world/s/dk5r7fnrj4fmvstrw2abu66sp3vtym"
+
+		d3.json(kwtData_url, function(errors, kwtData){
+			d3.json(url, function(errors, jsonData){
+				d3.json(temporal_url, function(errors, temporalData){
+						update_map_data(jsonData, "customer_heat_map");
+						update_bar_data(jsonData, "customer_bar");
+						update_temporal_graph(temporalData, "customers_order_time", );
+					})
+				})
+		})
+
+	}
 	switch_display("customer");
 	switch_customer_map_type("order_num");
+	
+
+	
 </script>
 </body>
 </html>
