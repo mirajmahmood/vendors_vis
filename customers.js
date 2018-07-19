@@ -1,6 +1,6 @@
 
 function update_map_data(kwtData, jsonData, divId){
-	console.log(divId)
+	
 	var total_num = 0
 
 	Object.keys(jsonData).forEach(function(key) {
@@ -32,7 +32,7 @@ function update_map_data(kwtData, jsonData, divId){
 		    .attr("fill", function(d) {
 
 		    	if (jsonData[d.properties.name]){ 
-		    		console.log("hey")
+
 		    		return z(jsonData[d.properties.name]) 
 		    	}
 		    	else 
@@ -488,7 +488,8 @@ function update_temporal_graph(jsonData, divId){
 
 	var line = d3.line()
 	    .x(function(d, i){return xScale(parseTime(x_data[i])) }) 
-	    .y(function(d) { return yScale(d.y); });
+	    .y(function(d) { return yScale(d.y); })
+	    .curve(d3.curveMonotoneX);
 
 
 	var g = svg.enter()
@@ -512,7 +513,7 @@ function update_temporal_graph(jsonData, divId){
 
 	var tool_tip_line = d3.tip()
 		.attr("class", "d3-tip")
-		.offset([0, 40])
+		.offset([350, -20])
 		.html("<div id='mySVGtooltip"+divId+"_line' class='customer'></div>");
 
 	g.call(tool_tip_line)
@@ -525,22 +526,23 @@ function update_temporal_graph(jsonData, divId){
     		var time = xScale.invert(d3.mouse(this)[0]);
     	
 			tool_tip_line.show();
-			var tool_tip_line_w = 100,
-				tool_tip_line_h = 50;
+			var tool_tip_line_w = 90,
+				tool_tip_line_h = 45;
 		
 
 			var tooltiplineSVG = d3.select("#mySVGtooltip"+divId+"_line")
 				.append("svg")
 				.attr("width", tool_tip_line_w)
-				.attr("height", tool_tip_line_h);
+				.attr("height", tool_tip_line_h)
+				.style("border", "1px solid black");
 
 			tooltiplineSVG.append("text")
 					.attr("x", 5)
-					.attr("y", 20)
+					.attr("y", 15)
 					.attr("dy", ".35em")
 					.style("fill", "black")
 					.style('font-size', 11)
-					.text("\nTime:"+formatDate(time));
+					.text("Time:"+formatDate(time));
 
 			tooltiplineSVG.append("text")
 					.attr("x", 5)
@@ -554,6 +556,7 @@ function update_temporal_graph(jsonData, divId){
     	})
     	.on('mouseout', function(di, i) {
     		tool_tip_line.hide();
+    			
     	});
 
 		
