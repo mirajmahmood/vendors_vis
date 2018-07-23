@@ -1,5 +1,5 @@
 var json_obj = {}
-
+var orders = {}
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
     var hrs = ~~(time / 3600);
@@ -117,8 +117,9 @@ function update_table(divId="driver_map"){
 		driver_div.innerHTML += "<h3>" + branch + "</h3>"
 		driver_div.innerHTML += "<div id='table_div'>" + table_html + driver_details +"</div>"+ "<br>"
 
-		rates_distance[branch] = rate_perdistance  * avg_distance
-		rates_hour[branch] = (rate_perhour) * (total_time/number_of_orders)
+		rates_distance[branch] = rate_perdistance  * avg_distance * number_of_orders
+		rates_hour[branch] = (rate_perhour) * (total_time)
+		orders[branch] = number_of_orders
 
 	});
 
@@ -170,7 +171,7 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
 		height = 500
 		var z = d3.scaleOrdinal()
     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-	z.domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))]);
+	z.domain([0, Object.keys(jsonData).length]);
 	var barWidth = 20;//width / d3.values(jsonData).length;
 ///////bar
 	var num_ticks = d3.values(jsonData).length
@@ -211,7 +212,7 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
 	        	
 	        	return d+divId+"_hour";
 	        })
-	        .attr("fill", function(d,i){ return z(jsonData[d])})
+	        .attr("fill", function(d,i){ return z(i)})
 	        .style("stroke-width", 0.5)
 	        .style('stroke', "#000");
 
@@ -253,7 +254,15 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
 					.attr("dy", ".35em")
 					.style("fill", "white")
 					.style('font-size', 13)
-					.text("\n Cost /hour: "+jsonData[d].toFixed(2));
+					.text("\n Total Cost: "+jsonData[d].toFixed(2));
+
+			tooltipbarSVG.append("text")
+					.attr("x", 5)
+					.attr("y", 50)
+					.attr("dy", ".35em")
+					.style("fill", "white")
+					.style('font-size', 13)
+					.text("\n Cost /hour: "+(jsonData[d]/orders[d]).toFixed(2));
 					
     		
     	})
@@ -281,7 +290,7 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
 		height = 500
 		var z = d3.scaleOrdinal()
     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-	z.domain([d3.min(d3.values(jsonData)), d3.max(d3.values(jsonData))]);
+	z.domain([0, Object.keys(jsonData).length]);
 	var barWidth = 20;//width / d3.values(jsonData).length;
 ///////bar
 	var num_ticks = d3.values(jsonData).length
@@ -322,7 +331,7 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
 	        	
 	        	return d+divId+"_km";
 	        })
-	        .attr("fill", function(d,i){ return z(jsonData[d])})
+	        .attr("fill", function(d,i){ return z(i)})
 	        .style("stroke-width", 0.5)
 	        .style('stroke', "#000");
 
@@ -364,7 +373,15 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
 					.attr("dy", ".35em")
 					.style("fill", "white")
 					.style('font-size', 13)
-					.text("\n Cost /km: "+jsonData[d].toFixed(2));
+					.text("\n Total Cost: "+jsonData[d].toFixed(2));
+
+			tooltipbarSVG.append("text")
+					.attr("x", 5)
+					.attr("y", 50)
+					.attr("dy", ".35em")
+					.style("fill", "white")
+					.style('font-size', 13)
+					.text("\n Cost /km: "+(jsonData[d]/orders[d]).toFixed(2));
 					
     		
     	})
