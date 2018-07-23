@@ -10,12 +10,17 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
 	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
-	
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.7/js/jquery.tablesorter.js"></script> 
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.7/js/jquery.tablesorter.min.js"></script> 
+	<script type="text/javascript" src="jquery-latest.js"></script> 
+	<script type="text/javascript" src="jquery.tablesorter.js"></script>
+	<link rel="stylesheet" href="blue/style.css">
 	<script src='csv2geojson.js'></script>
 	<script type="text/javascript" src="vendors.js"></script>
 	<script type="text/javascript" src="customers.js"></script>
 	<script type="text/javascript" src="drivers.js"></script>
 	<script type="text/javascript" src="main.js"></script>
+
     
 
     <style>
@@ -44,6 +49,17 @@
         #basket_title {padding-left: 10px;}
 
         #customers_order_time { position:absolute; top:700px; bottom:0; width:65%; height: 90%; padding-top:30px; }
+        #driver_map {padding: 10px;}
+        #driver_map .tablesorter {height:100%; width:55%; float: left;}
+        #driver_map #table_details {width:45%; float: right; padding-left: 10px;}
+        #driver_map #table_div{display: flex;}
+        #driver_map #rate_comparison_chart{display: flex;}
+        #driver_map #rate_comparison_chart_km {height:100%; width:50%; float: left;}
+        #driver_map #rate_comparison_chart_hour {width:48%; float: right; padding-left: 10px;}
+        #driver_map #headings{display: flex; width: 100%}
+        #driver_map #headings_km {height:100%; width:50%; float: left;}
+        #driver_map #headings_hour {width:50%; float: right; padding-left: 250px;}
+
     </style>
 </head>
 <body>
@@ -98,11 +114,59 @@
 	</select>
 </div>
 
-<div id='driver_map'></div>
+<div id='driver_map'>
+<label>Cost(driver): </label><input id="cost" value="1.6" onchange="javascript:update_table();" /> KD /per hour
+<select onchange="javascript:update_input_field(value); update_table();">
+	<option value="1.6">Car International hire</option>
+	<option value="1.9">Car Local hire</option>
+	<option value="1.7">Bike Mashkor Fleet</option>
+	<option value="1.5">Bike Company Fleet</option>
+</select>
+<br/><br/>
+<label>Base cost: </label><input id="base" value="0.250" onchange="javascript:update_table();"/> KD
+<br/><br/>
+
+ <div id="rate"> </div> 
+ <div id='controls' style="padding-top:10px">
+
+ 	<button style="padding:5px;" onclick="javascript:toggle_driver_view();"> Toggle view</button>
+</div>
+<div id='tables'></div>
+<div id="headings" style='display: none;'>
+	<div id="headings_km"><h2>Cost per km</h2></div>
+	<div id="headings_hour"><h2>Cost per hour</h2></div>
+</div>
+<div id="rate_comparison_chart" style='display: none;'>
+
+<div id="rate_comparison_chart_km" ></div>
+
+<div id="rate_comparison_chart_hour"></div>
+</div>
+
 
 
 
 <script type="text/javascript">
+	function toggle_driver_view(){
+		var bar_chart = document.getElementById("rate_comparison_chart");
+		var tables = document.getElementById("tables");
+		var headings = document.getElementById("headings");
+
+		if (bar_chart.style.display == 'none'){
+			bar_chart.style.display = '';
+			headings.style.display = '';
+			tables.style.display = 'none';
+
+		}
+		else if (tables.style.display == 'none'){
+			bar_chart.style.display = 'none';
+			headings.style.display = 'none';
+			tables.style.display = ''
+		}
+	}
+</script>
+<script type="text/javascript">
+
 	var months_customer_data = {
 		"March": {
 
@@ -110,7 +174,7 @@
 			"cost": "https://query.data.world/s/csf6y4ljcvzy65euzk6wuocbl53foo",
 			"temporal": "https://query.data.world/s/iuqnvz7ca4jtcynqor3kwv2hnsn54n",
 			"basket_size": "https://query.data.world/s/floqj3m2lrme7lvfv2k5ev7hxgbdkh",
-			"vendor_num": "https://query.data.world/s/kmmugj5vquxkjrab5ytfflkrnxvmht",
+			"vendor_num": "https://query.data.world/s/vycjn6xqtp3uozwuvlcnwb3lfbqer2",
 		},
 		"April": {
 
@@ -118,7 +182,7 @@
 			"cost": "https://query.data.world/s/jxb77wcy3ci26bdcsmnhian2pvyxc2",
 			"temporal": "https://query.data.world/s/cckeacn2z4na4gvmvsa336kdezoblz",
 			"basket_size": "https://query.data.world/s/ci6fvnrfhg7hoykmqmyvdftvkdfd6c",
-			"vendor_num": "https://query.data.world/s/zlslgykcilbfzhfkgdvbvmq6zf2dhw",
+			"vendor_num": "https://query.data.world/s/kfifeabbi4kzceorqrjwrz2r3btvci",
 		},
 		"May": {
 
@@ -126,7 +190,7 @@
 			"cost": "https://query.data.world/s/6oi24nusuacmglwsyrewsquw4w7cw3",
 			"temporal": "https://query.data.world/s/rawvyvjdiqptvvm3pmjnofqkldmbte",
 			"basket_size": "https://query.data.world/s/tq2pafoga7z76diakz533hh5esv2sv",
-			"vendor_num": "https://query.data.world/s/msdjbwhtsd4yb5m2nrl32bihzhqdck",
+			"vendor_num": "https://query.data.world/s/mn3dw65nqre6gi224rwydo6bueog2e",
 		},
 		"June": {
 
@@ -134,7 +198,7 @@
 			"cost": "https://query.data.world/s/woqgr6z37hymbk4pc7mrqayvsildlp",
 			"temporal": "https://query.data.world/s/izxakvqvffetx37bw3xsxzsba5swdx",
 			"basket_size": "https://query.data.world/s/7uyme4sz37ov37m46mam6yssscm26z",
-			"vendor_num": "https://query.data.world/s/tkt4phf5r2aqibnrdgm3hwsmn5d36x",
+			"vendor_num": "https://query.data.world/s/hoqsoz3gtyltv2scdn6flyuvcoc4ep",
 
 		},
 	};
@@ -283,8 +347,9 @@
 		})
 
 	}
-	switch_display("customer");
-	switch_customer_map_type("order_num");
+	switch_display("driver");
+	
+	//switch_customer_map_type("order_num");
 	
 </script>
 </body>
