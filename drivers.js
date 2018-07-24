@@ -509,6 +509,7 @@ function update_view_rates(base, divId="view_rates"){
 		height = 300;
 
 	var n = 19;
+	base = 1- base
 	x_data = Array.apply(null, {length: n}).map((d,i) => i)
 	y_data = Array.apply(null, {length: n}).map((d,i) => (isFinite(base/i) ? (base/i) : 0.0))
 
