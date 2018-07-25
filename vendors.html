@@ -115,7 +115,7 @@
 </div>
 
 <div id='driver_map'>
-<label>Cost(driver): </label><input id="cost" value="1.6" onchange="javascript:update_table();" /> KD /per hour
+<label>Cost (driver): </label> <input id="cost" value="1.6" onchange="javascript:update_table();" /> KD /per hour
 <select onchange="javascript:update_input_field(value); update_table();">
 	<option value="1.6">Car International hire</option>
 	<option value="1.9">Car Local hire</option>
@@ -123,11 +123,17 @@
 	<option value="1.5">Bike Company Fleet</option>
 </select>
 <br/><br/>
-<label>Base cost: </label><input id="base" value="0.250" onchange="javascript:update_table();"/> KD
-<label>Rate (per km): </label><input id="rate_km" value="0.250" onchange="javascript:update_table();"/> KD
+<div id="actual_rate_div"> Actual rate: <div id="actual_rate"></div></div> <br/>
+<label>Base cost: </label><input id="base" value="0.250" onchange="javascript:update_table(); update_total_cost();"/> KD <br/> <br/>
+<label>Rate (per km): </label><input id="rate_km" value="" onchange="javascript:update_table(); update_total_cost();"/> KD <br/><br/>
+<label>Distance (km): </label><input id="distance_km" value="1" onchange="javascript:update_total_cost();"/> KD <br/> <br/>
+<label>Actual delivery fee: </label> <div id="actual_delivery_fee"></div> <br/>
+<label>Processed (final) delivery fee: </label> <div id="processed_delivery_fee"></div> <br/>
+<label>Profit (per delivery): </label> <div id="delivery_fee_profit"></div>
 <br/><br/>
 
  <div id="rate"> </div> 
+
  <div id='controls' style="padding-top:10px">
 
  	<button style="padding:5px;" onclick="javascript:toggle_driver_view();"> Toggle view</button>

@@ -4,6 +4,10 @@ var rates_hour = {}
 var rates_distance = {}
 var profits_km = {}
 var profits_hour = {}
+var speeds = {}
+var rates = {}
+var rate = 0
+var max_rate_cost = 0
 
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
@@ -24,8 +28,17 @@ function fancyTimeFormat(time){
 }
 
 function update_json(errors, driverData){
+
+	var divId = "driver_map"
+	var cost = document.getElementById(divId).querySelector("#cost").value;
+
 	json_obj = driverData;
 	update_table();
+
+	calculate_rates(cost);
+	document.getElementById(divId).querySelector("#rate_km").value = rate.toFixed(3);
+	update_total_cost(divId);
+
 
 }
 function get_drivers(divId){
@@ -55,13 +68,12 @@ function update_table(divId="driver_map"){
 	var cost_per_min = cost/60;
 	var base = document.getElementById(divId).querySelector("#base").value;
 	var rate_km = document.getElementById(divId).querySelector("#rate_km").value;
-
 	var rates_perhour_sum = 0;
 	var rates_perdistance_sum = 0;
+
 	Object.keys(json_obj).forEach(function(branch){
 		var number_of_orders = 0
 		var total_cost_hour = 0
-		var total_cost_distance = 0
 		var total_revenue = 0
 		var total_time = 0
 		var total_distance = 0
@@ -76,8 +88,6 @@ function update_table(divId="driver_map"){
 			row = "<td id='branch'>" + branch + "</td>";
 			//customer location
 			row += "<td id='customer_location'>" + customer_location + "</td>";
-			//average basket size
-			// row += "<td>" + (json_obj[branch][customer_location]['basket_size']/json_obj[branch][customer_location]['order_num']).toFixed(2) + "</td>";
 			//average time to customer
 			row += "<td id='avg_time_order'>" + avg_time_order.toFixed(2) + "</td>";
 			//average cost per order per hour
@@ -112,18 +122,14 @@ function update_table(divId="driver_map"){
 		driver_details += "Cost per order (calculated by the avg time): " +(cost_per_min*(total_time/number_of_orders)).toFixed(2)+ "<br><br>"
 
 		driver_details += "Total cost (calculated by the hour): " + total_cost_hour.toFixed(2) + "<br><br>"
-		// driver_details += "Total profit: " + (total_revenue - total_cost_hour).toFixed(2) + "<br><br>"
-		
-		// driver_details += "Rate per hour: " +rate_perhour.toFixed(2)+ "<br><br>"
+
 		driver_details += "<br><br>"
 		driver_details += "Avg. distance per order: " + avg_distance.toFixed(2) + "<br><br>"
 		driver_details += "Cost per order (calculated by distance): " +(rate_km*avg_distance).toFixed(2)+ "<br><br>"
 		driver_details += "Total cost (calculated by distance): " +(rate_km*parseFloat(total_distance/1000)).toFixed(2)+ "<br><br>"
-		// driver_details += "Total profit (calculated by distance): " + (total_revenue - (rate_km*parseFloat(total_distance/1000))).toFixed(2) + "<br><br>"
-		
+
 		rates_perhour_sum += rate_perhour 
 		rates_perdistance_sum += rate_perdistance 
-		// driver_details += (cost_hour-0.250)/orders_hour.toFixed(3)+ "<br><br>"
 
 		driver_details += "</h4> </div>"
 		
@@ -137,6 +143,7 @@ function update_table(divId="driver_map"){
 		profits_hour[branch] = (total_revenue - total_cost_hour)
 		orders[branch] = number_of_orders
 
+		calculate_speed(branch);
 	});
 
 	Object.keys(json_obj).forEach(function(branch){
@@ -145,10 +152,12 @@ function update_table(divId="driver_map"){
 	});
 	document.getElementById(divId).querySelector("#rate").innerHTML = "";//"Rate (per hour): "+(rates_perhour_sum/Object.keys(json_obj).length).toFixed(2) + " KD" + "<br/><br/>" ;//+ "Rate (per km): "+(rates_perdistance_sum/Object.keys(json_obj).length).toFixed(2) + " KD"
 
-	var value_cost = document.getElementById("cost_analysis").value;
-	toggle_cost_analysis(value_cost)
+	var value_cost_type = document.getElementById("cost_analysis").value;
+
+	toggle_cost_analysis(value_cost_type)
 	update_view_rates(base);
-	
+	calculate_rates(cost);
+	update_total_cost(divId);
 
 }
 function toggle_cost_analysis(value){
@@ -246,17 +255,18 @@ function draw_view_rates(base, divId="view_rates"){
 }
 function draw_bar_chart(divId){
 	var width = 450,
-		height = 500
+		height = 500;
 
-    	var margin = {top: 20, right: 20, bottom: 95, left: 50};
-		var svg_bar = d3.select("#"+divId+"_hour").append("svg")
-				.attr("width", width + margin.left + margin.right)
-				.attr("height", height + margin.top + margin.bottom)
-				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	var margin = {top: 20, right: 20, bottom: 95, left: 50};
 
-		var svg_bar = d3.select("#"+divId+"_km").append("svg")
-				.attr("width", width + margin.left + margin.right)
+	var svg_bar = d3.select("#"+divId+"_hour").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	var svg_bar = d3.select("#"+divId+"_km").append("svg")
+			.attr("width", width + margin.left + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -279,7 +289,8 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 	z.domain([0, Object.keys(data_two).length]);
 	var barWidth = 20;//width / d3.values(data_two).length;
-///////bar
+
+	///////bar
 	var num_ticks = d3.values(data_two).length
 
 	var x = d3.scaleLinear()
@@ -396,7 +407,8 @@ function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 	z.domain([0, Object.keys(data_one).length]);
 	var barWidth = 20;//width / d3.values(data_one).length;
-///////bar
+	
+	///////bar
 	var num_ticks = d3.values(data_one).length
 
 	var x = d3.scaleLinear()
@@ -513,6 +525,7 @@ function update_view_rates(base, divId="view_rates"){
 	x_data = Array.apply(null, {length: n}).map((d,i) => i)
 	y_data = Array.apply(null, {length: n}).map((d,i) => (isFinite(base/i) ? (base/i) : 0.0))
 
+	max_rate_cost = d3.max(y_data)
 
 	var dataset = d3.range(n).map(function(d, i) { 
 	
@@ -577,7 +590,7 @@ function update_view_rates(base, divId="view_rates"){
 
 	var tool_tip_line = d3.tip()
 		.attr("class", "d3-tip")
-		.offset([350, -20])
+		.offset([0, 0])
 		.html("<div id='mySVGtooltip"+divId+"_line' class='driver'></div>");
 
 	g.call(tool_tip_line)
@@ -635,7 +648,8 @@ function update_bar_chart_profits(data_one, data_two, divId="rate_comparison_cha
     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 	z.domain([0, Object.keys(data_two).length]);
 	var barWidth = 20;//width / d3.values(data_two).length;
-///////bar
+	
+	///////bar
 	var num_ticks = d3.values(data_two).length
 
 	var x = d3.scaleLinear()
@@ -751,7 +765,8 @@ function update_bar_chart_profits(data_one, data_two, divId="rate_comparison_cha
     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 	z.domain([0, Object.keys(data_one).length]);
 	var barWidth = 20;//width / d3.values(data_one).length;
-///////bar
+	
+	///////bar
 	var num_ticks = d3.values(data_one).length
 
 	var x = d3.scaleLinear()
@@ -856,6 +871,82 @@ function update_bar_chart_profits(data_one, data_two, divId="rate_comparison_cha
 
     	});
 /////////
+}
+
+function calculate_speed(branch_name){
+
+	var dt = 0, //distance total
+		ot = 0, // order total
+		distance_w = 0.4, //weightage of distance
+		order_w = 0.6, //weightage of orders
+		branch = json_obj[branch_name]
+
+
+	Object.keys(branch).forEach((d,i) => dt+= parseFloat(branch[d]['distance']))
+	Object.keys(branch).forEach((d,i) => ot+= parseFloat(branch[d]['order_num']))
+
+	var sum_speed_w = 0, //sum of weighted speed
+		weight = 0,
+		sum_of_weights = 0 //sum of all weighted distances and weighted orders
+
+	Object.keys(branch).forEach(function(d, i) {
+		weight = (distance_w * (parseFloat(branch[d]['distance'])/dt)) + (order_w * (parseFloat(branch[d]['order_num'])/ot))
+		sum_speed_w += weight * parseFloat(branch[d]['speed'])
+
+		sum_of_weights += weight
+
+	})
+
+	speeds[branch_name] = (sum_speed_w/sum_of_weights)
 
 }
+function calculate_rates(cost, divId='actual_rate'){
+
+	var speeds_sum = 0,
+		rates_sum = 0;
+	Object.keys(speeds).forEach(function(branch){ 
+		rates[branch] = cost/speeds[branch]
+		speeds_sum += speeds[branch]
+		rates_sum += rates[branch]
+	})
+	var avg_speed = speeds_sum/Object.keys(speeds).length
+
+	var actual_rate = cost/avg_speed
+	var rate_avgs = rates_sum/Object.keys(rates).length
+
+	rate = actual_rate
+	document.getElementById(divId).innerHTML = rate.toFixed(3)
+	
+}
+
+function update_total_cost(divId="driver_map", actualDivId='actual_delivery_fee', processedDivId='processed_delivery_fee', profitDivId='delivery_fee_profit'){
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+	var distance_km = parseFloat(document.getElementById(divId).querySelector("#distance_km").value);
+	var profit = 0;
+
+	var delivery_fee = (base) + (rate * distance_km)
+	var actual_cost =(actual_rate * distance_km)
+
+	var max_cost = (base) + (max_rate_cost * 1)
+
+	document.getElementById(actualDivId).innerHTML = delivery_fee.toFixed(3)
+
+	var processed_delivery_fee = 0 
+
+	if (delivery_fee > max_cost){
+		processed_delivery_fee = max_cost;
+	}
+	else{
+		processed_delivery_fee = (Math.round((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+	}
+
+	document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
+	document.getElementById(profitDivId).innerHTML = (delivery_fee-actual_cost).toFixed(3);
+
+}
+
+
+
 
