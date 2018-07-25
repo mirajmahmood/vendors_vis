@@ -930,7 +930,7 @@ function update_total_cost(divId="driver_map", actualDivId='actual_delivery_fee'
 	var actual_cost =(actual_rate * distance_km)
 
 	var max_cost = (base) + (max_rate_cost * 1)
-
+	console.log(max_cost)
 	document.getElementById(actualDivId).innerHTML = delivery_fee.toFixed(3)
 
 	var processed_delivery_fee = 0 
@@ -943,8 +943,8 @@ function update_total_cost(divId="driver_map", actualDivId='actual_delivery_fee'
 	}
 
 	document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
-	document.getElementById(profitDivId).innerHTML = (delivery_fee-actual_cost).toFixed(3);
-
+	document.getElementById(profitDivId).innerHTML = (processed_delivery_fee-actual_cost).toFixed(3);
+	console.log(actual_rate)
 }
 
 
