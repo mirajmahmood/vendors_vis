@@ -115,7 +115,8 @@
 </div>
 
 <div id='driver_map'>
-<label>Cost (driver): </label> <input id="cost" value="1.6" onchange="javascript:update_table();" /> KD /per hour
+<h3 style="text-decoration: underline; display: inline;" >Driver</h3> &nbsp
+
 <select onchange="javascript:update_input_field(value); update_table();">
 	<option value="1.6">Car International hire</option>
 	<option value="1.9">Car Local hire</option>
@@ -123,13 +124,26 @@
 	<option value="1.5">Bike Company Fleet</option>
 </select>
 <br/><br/>
-<div id="actual_rate_div"> Actual rate: <div id="actual_rate"></div></div> <br/>
-<label>Base cost: </label><input id="base" value="0.250" onchange="javascript:update_table(); update_total_cost();"/> KD <br/> <br/>
-<label>Rate (per km): </label><input id="rate_km" value="" onchange="javascript:update_table(); update_total_cost();"/> KD <br/><br/>
-<label>Distance (km): </label><input id="distance_km" value="1" onchange="javascript:update_total_cost();"/> KD <br/> <br/>
-<label>Actual delivery fee: </label> <div id="actual_delivery_fee"></div> <br/>
-<label>Processed (final) delivery fee: </label> <div id="processed_delivery_fee"></div> <br/>
-<label>Profit (per delivery): </label> <div id="delivery_fee_profit"></div>
+<label>Cost per hour: </label> <input id="cost" value="1.6" onchange="javascript:update_table();" /> KD /hour <br/> <br/>
+<label>Cost per km: </label> <div id="actual_rate" style='display: inline'> </div> &nbsp KD /hour 
+<br/><br/>
+
+<h3 style="text-decoration: underline;" >Delivery fee</h3>
+
+Delivery fee = Base cost + ( Rate x Distance ) <br/> <br/>
+
+Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(); update_total_cost();"/> + (
+<input id="rate_km" value="" onchange="javascript:update_table(); update_total_cost();"/> x 
+<input id="distance_km" value="1" onchange="javascript:update_total_cost();"/> )
+
+ <br/><br/>
+
+<label>Preliminary delivery fee: </label> <div id="preliminary_delivery_fee" style='display: inline'></div>  <br/><br/><br/>
+
+
+<label style="font-weight: bold;">Actual cost: </label> <div id="actual_fee_cost" style='display: inline'></div>  <br/><br/>
+<label style="font-weight: bold;">Delivery fee: </label> <div id="processed_delivery_fee" style='display: inline'></div> <br/> <br/>
+<label style="font-weight: bold;">Profit (per delivery): </label> <div id="delivery_fee_profit" style='display: inline'></div>
 <br/><br/>
 
  <div id="rate"> </div> 
