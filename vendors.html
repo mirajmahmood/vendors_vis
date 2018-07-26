@@ -12,6 +12,8 @@
 	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.7/js/jquery.tablesorter.js"></script> 
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.7/js/jquery.tablesorter.min.js"></script> 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"></script>
+
 	<script type="text/javascript" src="jquery-latest.js"></script> 
 	<script type="text/javascript" src="jquery.tablesorter.js"></script>
 	<link rel="stylesheet" href="blue/style.css">
@@ -30,6 +32,12 @@
 		    max-width: 100%;
 		    overflow-x: hidden;
 		}
+		canvas {
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+		}
+
         #vendor_map { position:absolute; top:100px; bottom:0; width:80%; height: 80%  }
         #customer_map { padding-left:10px; }
         #customer_heat_map { position:absolute; top:100px; bottom:0; width:50%; height: 80%; padding:10px; }
@@ -53,12 +61,8 @@
         #driver_map .tablesorter {height:100%; width:60%; float: left;}
         #driver_map #table_details {width:40%; float: right; padding-left: 10px;}
         #driver_map #table_div{display: flex;}
-        #driver_map #rate_comparison_chart{display: flex;}
-        #driver_map #rate_comparison_chart_km {height:100%; width:50%; float: left;}
-        #driver_map #rate_comparison_chart_hour {width:48%; float: right; padding-left: 10px;}
-        #driver_map #headings{display: flex; width: 100%}
-        #driver_map #headings_km {height:100%; width:50%; float: left;}
-        #driver_map #headings_hour {width:50%; float: right; padding-left: 250px;}
+        #driver_map #rate_comparison_chart{width: 60%;}
+
 
     </style>
 </head>
@@ -154,21 +158,12 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 </div>
 <div id='tables'></div>
 
-<div id="headings" style='display: none;'>
 
-	<div id="headings_km"><h2> <span id="cost_head_km">Cost</span> (per average distance)</h2></div>
-	<div id="headings_hour"><h2><span id="cost_head_hr">Cost</span> (per average time)</h2></div>
-</div>
-<select id="cost_analysis" style="padding:5px; display: none" onchange="javascript:toggle_cost_analysis(value);"> 
-	<option value="cost"> View Cost </option>
-	<!-- <option value="profit"> View Profit </option> -->
-</select>
 <br><br>
 <div id="rate_comparison_chart" style='display: none;'>
 
-<div id="rate_comparison_chart_km" ></div>
-
-<div id="rate_comparison_chart_hour"></div>
+<canvas id="canvas"></canvas>
+<canvas id="canvas_text"></canvas>
 </div>
 <div id="view_rates" style='display: none'>
 	
@@ -179,23 +174,17 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 	function toggle_driver_view(){
 		var bar_chart = document.getElementById("rate_comparison_chart");
 		var tables = document.getElementById("tables");
-		var headings = document.getElementById("headings");
-		var cost_analysis = document.getElementById("cost_analysis");
 		var view_rates = document.getElementById("view_rates");
 
 		view_rates.style.display = 'none';
 
 		if (bar_chart.style.display == 'none'){
 			bar_chart.style.display = '';
-			headings.style.display = '';
-			cost_analysis.style.display = ''
 			tables.style.display = 'none';
 
 		}
 		else if (tables.style.display == 'none'){
 			bar_chart.style.display = 'none';
-			headings.style.display = 'none';
-			cost_analysis.style.display = 'none'
 			tables.style.display = ''
 		}
 	}
@@ -204,22 +193,16 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 	function view_rates(){
 		var bar_chart = document.getElementById("rate_comparison_chart");
 		var tables = document.getElementById("tables");
-		var headings = document.getElementById("headings");
-		var cost_analysis = document.getElementById("cost_analysis");
 		var view_rates = document.getElementById("view_rates");
 
 		if (view_rates.style.display == 'none'){
 
 			bar_chart.style.display = 'none';
-			headings.style.display = 'none';
 			tables.style.display = 'none';
-			cost_analysis.style.display = 'none'
 			view_rates.style.display = '';
 		}
 		else{
 			bar_chart.style.display = 'none';
-			headings.style.display = 'none';
-			cost_analysis.style.display = 'none'
 			tables.style.display = '';
 			view_rates.style.display = 'none';
 		}

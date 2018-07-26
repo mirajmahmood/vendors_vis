@@ -7,7 +7,11 @@ var profits_hour = {}
 var speeds = {}
 var rates = {}
 var rate = 0
+var max_cost = 1
 var max_rate_cost = 0
+
+var myMixedChart = null;
+var chartData = {}
 
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
@@ -33,30 +37,33 @@ function update_json(errors, driverData){
 	var cost = document.getElementById(divId).querySelector("#cost").value;
 
 	json_obj = driverData;
+	draw_profit_chart();
+
 	update_table();
 
 	calculate_rates(cost);
 	document.getElementById(divId).querySelector("#rate_km").value = rate.toFixed(3);
-	update_total_cost(divId);
 
+	update_total_cost(divId);
+	
+
+	
 
 }
 function get_drivers(divId){
 	
 	var base = document.getElementById(divId).querySelector("#base").value;
 	var driver_url = "https://query.data.world/s/4to4mwlzrrpzhcxtv4m3spi5vlhnbn";
-	draw_bar_chart("rate_comparison_chart");
 	draw_view_rates(base)
 	
 	d3.queue()
 	    .defer(d3.json, driver_url)
 	    .await(update_json);
+
 }
 
 
 function update_table(divId="driver_map"){
-
-
 
 	var table_headers_html = "<thead><tr><th>Vendor</th><th>Customer Location</th><th>Avg. Time to Customer</th><th>Cost(avg time)</th><th>Distance(km)</th><th>Cost(avg distance)</th><th>Travelling time</th><th>Number of Orders</th></tr></thead>";
 	var table_body_html = "<tbody>";
@@ -152,34 +159,22 @@ function update_table(divId="driver_map"){
 	});
 	document.getElementById(divId).querySelector("#rate").innerHTML = "";//"Rate (per hour): "+(rates_perhour_sum/Object.keys(json_obj).length).toFixed(2) + " KD" + "<br/><br/>" ;//+ "Rate (per km): "+(rates_perdistance_sum/Object.keys(json_obj).length).toFixed(2) + " KD"
 
-	var value_cost_type = document.getElementById("cost_analysis").value;
 
-	toggle_cost_analysis(value_cost_type)
+
+	toggle_cost_analysis()
 	update_view_rates(base);
 	calculate_rates(cost);
 	update_total_cost(divId);
+	
 
 }
 function toggle_cost_analysis(value){
-	var heading_km = document.getElementById("cost_head_km");
-	var heading_hr = document.getElementById("cost_head_hr");
 
-	if (value == "cost"){
-		heading_hr.innerText = "Cost"
-		heading_km.innerText = "Cost"
-		update_bar_chart(rates_distance, rates_hour);
-	}
-	else if(value == "profit"){
-		heading_hr.innerText = "Profit"
-		heading_km.innerText = "Profit"
-		update_bar_chart_profits(profits_km, profits_hour);
-	}
 }
 
 
 function update_input_field(value){
 	document.getElementById("driver_map").querySelector("#cost").value = value;
-
 }
 function draw_view_rates(base, divId="view_rates"){
 
@@ -253,265 +248,191 @@ function draw_view_rates(base, divId="view_rates"){
 
 
 }
-function draw_bar_chart(divId){
-	var width = 450,
-		height = 500;
+function draw_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"){
+	var n = 19;
+	var profits = [],
+		total_profits_sum = 0 ;
+	var number_of_orders = Array.apply(null, {length: n}).map((d,i) => 0);
 
-	var margin = {top: 20, right: 20, bottom: 95, left: 50};
+	var distances = Array.apply(null, {length: n}).map((d,i) => i)
 
-	var svg_bar = d3.select("#"+divId+"_hour").append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
-			.append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
 
-	var svg_bar = d3.select("#"+divId+"_km").append("svg")
-			.attr("width", width + margin.left + margin.right)
-				.attr("height", height + margin.top + margin.bottom)
-				.append("g")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	var cost_minus_base = max_cost - base
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+	Object.keys(json_obj).forEach(function(branch){
+		Object.keys(json_obj[branch]).forEach(function(customer_location){
+			var dist = Math.floor(json_obj[branch][customer_location]['distance']/1000)
+			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
+		});
+	});
+	
+	distances.forEach(function(distance, i){
+
+		var delivery_fee = (base) + (rate * distance)
+
+		var actual_cost = (actual_rate * distance)
+		var processed_delivery_fee = 0 
+
+		if (delivery_fee > max_cost){
+			processed_delivery_fee = max_cost;
+		}
+		else{
+			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+		}
+
+		profits.push(((processed_delivery_fee-actual_cost)*number_of_orders[i]).toFixed(3));
+		total_profits_sum += ((processed_delivery_fee-actual_cost)*number_of_orders[i])
+		//rates.push(rate*distance)
 
 
+	});
+	console.log(total_profits_sum)
 
+	//Array.apply(null, {length: n}).map((d,i) => (isFinite(cost_minus_base/i) ? (cost_minus_base/i) : 0.0).toFixed(2))
+    chartData = {
+      xLabels: distances, 
+      datasets: [{
+        type: 'line',
+        label: 'Number of orders',
+        borderColor: 'rgb(255, 205, 86)',
+        borderWidth: 2,
+        fill: false,
+        data: number_of_orders,
+        yAxisID: 'rate-y-axis'
+      }, {
+        type: 'bar',
+        label: 'Profits',
+        backgroundColor: 'rgb(54, 162, 235)',
+        data: profits,
+        yAxisID: 'profit-y-axis',
+        borderColor: 'white',
+        borderWidth: 2
+      }]
+    };
+	var ctx = document.getElementById(rateDivId).querySelector("#canvas").getContext('2d');
+    myMixedChart = new Chart(ctx, {
+        type: 'bar',
+        data: chartData,
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: 'Profit vs. Number of Orders Per Distance'
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Distance (km)'
+              }
+            }],
+            yAxes: [{
+              type: 'linear',
+              position: 'left',
+              display: true,
+              id: 'profit-y-axis',
+              scaleLabel: {
+                display: true,
+                labelString: 'Profit (KD)'
+              },
+              ticks: {
+                reverse: false
+              }
+            },
+            {
+              type: 'linear',
+              position: 'right',
+              display: true,
+              id: 'rate-y-axis',
+              scaleLabel: {
+                display: true,
+                labelString: 'Number of orders'
+              },
+              ticks: {
+                reverse: false
+              }
+            }]
+          },
+          tooltips: {
+            mode: 'index',
+            intersect: true
+          }
+        }
+      });
+
+    var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
+
+	ctx_text.fillStyle = 'red';
+
+	ctx_text.font = '12pt Verdana';
+	ctx_text.fillText('Projected profit: '+ total_profits_sum+ " KD", 50, 50);
+
+	ctx_text.fill();
+	ctx_text.stroke();
 }
 
-function update_bar_chart(data_one, data_two, divId="rate_comparison_chart"){
+function update_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"){
+	var n = 19;
+	var profits = [],
+		total_profits_sum = 0,
+		number_of_orders = Array.apply(null, {length: n}).map((d,i) => 0)
 
-	var total_num = 0
+	var distances = Array.apply(null, {length: n}).map((d,i) => i)
 
-	Object.keys(data_two).forEach(function(key) {
-		total_num += data_two[key];
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+
+	var cost_minus_base = max_cost - base
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+	Object.keys(json_obj).forEach(function(branch){
+		Object.keys(json_obj[branch]).forEach(function(customer_location){
+			var dist = Math.floor(json_obj[branch][customer_location]['distance']/1000)
+			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
+		});
 	});
 
-	var width = 450,
-		height = 500
-		var z = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-	z.domain([0, Object.keys(data_two).length]);
-	var barWidth = 20;//width / d3.values(data_two).length;
+	distances.forEach(function(distance, i){
 
-	///////bar
-	var num_ticks = d3.values(data_two).length
+		var delivery_fee = (base) + (rate * distance)
 
-	var x = d3.scaleLinear()
-		.domain([0, d3.values(data_two).length]).nice(num_ticks)
-        .rangeRound([0, width]);
+		var actual_cost = (actual_rate * distance)
+		var processed_delivery_fee = 0 
 
-    var ticks = x.ticks(num_ticks);
+		if (delivery_fee > max_cost){
+			processed_delivery_fee = max_cost;
+		}
+		else{
+			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+		}
 
-    var y = d3.scaleLinear()
-        .domain([0, d3.max(d3.values(data_two).concat(d3.values(data_one)))]).nice(8)
-        .range([height, 0]);
-
-    
-    $("#mySVGtooltip_bar_hour").each(function(d) {
-        $(this).remove();
-    });
-	var tool_tip_bar_hour = d3.tip()
-		.attr("class", "d3-tip")
-		.offset([0, 80])
-		.html("<div id='mySVGtooltip_bar_hour' class='driver'></div>");
-
-	var svg_bar = 
-		d3.select("#"+divId +"_hour"+" svg g").selectAll("rect")
-			.remove()
-			.exit()
-			.data(Object.keys(data_two))
-
-	var g = svg_bar.enter()
-			.append("rect")
-			.attr("class", "bar")
-	        .attr("x", (d,i) => i * barWidth + 1 )
-	        .attr("y", (d, i) => y(data_two[d]))
-	        .attr("width", barWidth-1)
-	        .attr("height", function(d,i) { return (height - y(data_two[d])); })
-	        .attr("id", function(d, i){
-	        	
-	        	return d+divId+"_hour";
-	        })
-	        .attr("fill", function(d,i){ return z(i)})
-	        .style("stroke-width", 0.5)
-	        .style('stroke', "#000");
-
-	g.call(tool_tip_bar_hour);
-
-	g
-    	.on('mouseover', function(d, i) {
-
-    		d3.select(this)
-    			.style("stroke-width", 2)
-    			.style('stroke', "#000");
-
-    	    tool_tip_bar_hour.show();
-			var tool_tip_bar_w = 170,
-				tool_tip_bar_h = 70;
-		
-
-			var tooltipbarSVG = d3.select("#mySVGtooltip_bar_hour")
-				.append("svg")
-				.attr("width", tool_tip_bar_w)
-				.attr("height", tool_tip_bar_h)
-				.style("background", "rgba(0, 0, 0, 0.6)")
-				.style("border", "1px solid black")
-				.attr("fill-opacity", "1")
-				.style('z-index',3);
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 20)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Area: "+d);
-					
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 35)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Cost /hour: "+data_two[d].toFixed(2));
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 50)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Total Cost: "+(data_two[d]*orders[d]).toFixed(2));
-					
-    		
-    	})
-    	.on('mouseout', function(d, i) {
-    		
-    		d3.select(this)
-    			.style("stroke-width", 0.5);
-
-    		tool_tip_bar_hour.hide();
+		profits.push(((processed_delivery_fee-actual_cost)*number_of_orders[i]).toFixed(3));
+		total_profits_sum += ((processed_delivery_fee-actual_cost)*number_of_orders[i])
+		//rates.push(rate*distance)
 
 
-
-    	});
-    	
-
-	var total_num = 0
-
-	Object.keys(data_one).forEach(function(key) {
-		total_num += data_one[key];
 	});
+	console.log(total_profits_sum)
 
-	var width = 450,
-		height = 500
-		var z = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-	z.domain([0, Object.keys(data_one).length]);
-	var barWidth = 20;//width / d3.values(data_one).length;
+	chartData.datasets[1].data = profits
+	//chartData.datasets[0].data = rates
+	myMixedChart.update();
+
+    var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
+
 	
-	///////bar
-	var num_ticks = d3.values(data_one).length
 
-	var x = d3.scaleLinear()
-		.domain([0, d3.values(data_one).length]).nice(num_ticks)
-        .rangeRound([0, width]);
+	ctx_text.clearRect(0,0,450,50)
+	ctx_text.fillText('Projected profit: '+ total_profits_sum.toFixed(3)+ " KD", 20, 50);
 
-    var ticks = x.ticks(num_ticks);
-
-    var y = d3.scaleLinear()
-        .domain([0, d3.max(d3.values(data_two).concat(d3.values(data_one)))]).nice(8)
-        .range([height, 0]);
-
-    
-    $("#mySVGtooltip_bar").each(function(d) {
-        $(this).remove();
-    });
-	var tool_tip_bar = d3.tip()
-		.attr("class", "d3-tip")
-		.offset([0, 80])
-		.html("<div id='mySVGtooltip_bar' class='driver'></div>");
-
-	var svg_bar = 
-		d3.select("#"+divId +"_km"+" svg g").selectAll("rect")
-			.remove()
-			.exit()
-			.data(Object.keys(data_one))
-
-	var g = svg_bar.enter()
-			.append("rect")
-			.attr("class", "bar")
-	        .attr("x", (d,i) => i * barWidth + 1 )
-	        .attr("y", (d, i) => y(data_one[d]))
-	        .attr("width", barWidth-1)
-	        .attr("height", function(d,i) { return (height - y(data_one[d])); })
-	        .attr("id", function(d, i){
-	        	
-	        	return d+divId+"_km";
-	        })
-	        .attr("fill", function(d,i){ return z(i)})
-	        .style("stroke-width", 0.5)
-	        .style('stroke', "#000");
-
-	g.call(tool_tip_bar);
-
-	g
-    	.on('mouseover', function(d, i) {
-
-    		d3.select(this)
-    			.style("stroke-width", 2)
-    			.style('stroke', "#000");
-
-    	    tool_tip_bar.show();
-			var tool_tip_bar_w = 170,
-				tool_tip_bar_h = 70;
-		
-
-			var tooltipbarSVG = d3.select("#mySVGtooltip_bar")
-				.append("svg")
-				.attr("width", tool_tip_bar_w)
-				.attr("height", tool_tip_bar_h)
-				.style("background", "rgba(0, 0, 0, 0.6)")
-				.style("border", "1px solid black")
-				.attr("fill-opacity", "1")
-				.style('z-index',3);
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 20)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Area: "+d);
-					
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 35)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Cost /km: "+data_one[d].toFixed(2));
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 50)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Total Cost: "+(data_one[d]*orders[d]).toFixed(2));
-					
-    		
-    	})
-    	.on('mouseout', function(d, i) {
-    		
-    		d3.select(this)
-    			.style("stroke-width", 0.5);
-
-    		tool_tip_bar.hide();
-
-
-
-    	});
-/////////
+	ctx_text.fill();
+	ctx_text.stroke();
 
 }
 
@@ -521,7 +442,7 @@ function update_view_rates(base, divId="view_rates"){
 		height = 300;
 
 	var n = 19;
-	base = 1- base
+	base = max_cost - base
 	x_data = Array.apply(null, {length: n}).map((d,i) => i)
 	y_data = Array.apply(null, {length: n}).map((d,i) => (isFinite(base/i) ? (base/i) : 0.0))
 
@@ -634,245 +555,6 @@ function update_view_rates(base, divId="view_rates"){
     	});
 }
 
-function update_bar_chart_profits(data_one, data_two, divId="rate_comparison_chart"){
-
-	var total_num = 0
-
-	Object.keys(data_two).forEach(function(key) {
-		total_num += data_two[key];
-	});
-
-	var width = 450,
-		height = 500
-		var z = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-	z.domain([0, Object.keys(data_two).length]);
-	var barWidth = 20;//width / d3.values(data_two).length;
-	
-	///////bar
-	var num_ticks = d3.values(data_two).length
-
-	var x = d3.scaleLinear()
-		.domain([0, d3.values(data_two).length]).nice(num_ticks)
-        .rangeRound([0, width]);
-
-    var ticks = x.ticks(num_ticks);
-
-    var y = d3.scaleLinear()
-        .domain([0, d3.max(d3.values(data_two).concat(d3.values(data_one)))]).nice(8)
-        .range([height, 0]);
-
-    
-    $("#mySVGtooltip_bar_hour").each(function(d) {
-        $(this).remove();
-    });
-	var tool_tip_bar_hour = d3.tip()
-		.attr("class", "d3-tip")
-		.offset([0, 80])
-		.html("<div id='mySVGtooltip_bar_hour' class='driver'></div>");
-
-	var svg_bar = 
-		d3.select("#"+divId +"_hour"+" svg g").selectAll("rect")
-			.remove()
-			.exit()
-			.data(Object.keys(data_two))
-
-	var g = svg_bar.enter()
-			.append("rect")
-			.attr("class", "bar")
-	        .attr("x", (d,i) => i * barWidth + 1 )
-	        .attr("y", (d, i) => y(data_two[d]))
-	        .attr("width", barWidth-1)
-	        .attr("height", function(d,i) { return (height - y(data_two[d])); })
-	        .attr("id", function(d, i){
-	        	
-	        	return d+divId+"_hour";
-	        })
-	        .attr("fill", function(d,i){ return z(i)})
-	        .style("stroke-width", 0.5)
-	        .style('stroke', "#000");
-
-	g.call(tool_tip_bar_hour);
-
-	g
-    	.on('mouseover', function(d, i) {
-
-    		d3.select(this)
-    			.style("stroke-width", 2)
-    			.style('stroke', "#000");
-
-    	    tool_tip_bar_hour.show();
-			var tool_tip_bar_w = 170,
-				tool_tip_bar_h = 70;
-		
-
-			var tooltipbarSVG = d3.select("#mySVGtooltip_bar_hour")
-				.append("svg")
-				.attr("width", tool_tip_bar_w)
-				.attr("height", tool_tip_bar_h)
-				.style("background", "rgba(0, 0, 0, 0.6)")
-				.style("border", "1px solid black")
-				.attr("fill-opacity", "1")
-				.style('z-index',3);
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 20)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Area: "+d);
-					
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 35)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Total Profit: "+data_two[d].toFixed(2));
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 50)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Profit /order: "+(data_two[d]/orders[d]).toFixed(2));
-    		
-    	})
-    	.on('mouseout', function(d, i) {
-    		
-    		d3.select(this)
-    			.style("stroke-width", 0.5);
-
-    		tool_tip_bar_hour.hide();
-
-
-
-    	});
-    	
-
-	var total_num = 0
-
-	Object.keys(data_one).forEach(function(key) {
-		total_num += data_one[key];
-	});
-
-	var width = 450,
-		height = 500
-		var z = d3.scaleOrdinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-	z.domain([0, Object.keys(data_one).length]);
-	var barWidth = 20;//width / d3.values(data_one).length;
-	
-	///////bar
-	var num_ticks = d3.values(data_one).length
-
-	var x = d3.scaleLinear()
-		.domain([0, d3.values(data_one).length]).nice(num_ticks)
-        .rangeRound([0, width]);
-
-    var ticks = x.ticks(num_ticks);
-
-    var y = d3.scaleLinear()
-        .domain([0, d3.max(d3.values(data_two).concat(d3.values(data_one)))]).nice(8)
-        .range([height, 0]);
-
-    
-    $("#mySVGtooltip_bar").each(function(d) {
-        $(this).remove();
-    });
-	var tool_tip_bar = d3.tip()
-		.attr("class", "d3-tip")
-		.offset([0, 80])
-		.html("<div id='mySVGtooltip_bar' class='driver'></div>");
-
-	var svg_bar = 
-		d3.select("#"+divId +"_km"+" svg g").selectAll("rect")
-			.remove()
-			.exit()
-			.data(Object.keys(data_one))
-
-	var g = svg_bar.enter()
-			.append("rect")
-			.attr("class", "bar")
-	        .attr("x", (d,i) => i * barWidth + 1 )
-	        .attr("y", (d, i) => y(data_one[d]))
-	        .attr("width", barWidth-1)
-	        .attr("height", function(d,i) { return (height - y(data_one[d])); })
-	        .attr("id", function(d, i){
-	        	
-	        	return d+divId+"_km";
-	        })
-	        .attr("fill", function(d,i){ return z(i)})
-	        .style("stroke-width", 0.5)
-	        .style('stroke', "#000");
-
-	g.call(tool_tip_bar);
-
-	g
-    	.on('mouseover', function(d, i) {
-
-    		d3.select(this)
-    			.style("stroke-width", 2)
-    			.style('stroke', "#000");
-
-    	    tool_tip_bar.show();
-			var tool_tip_bar_w = 170,
-				tool_tip_bar_h = 70;
-		
-
-			var tooltipbarSVG = d3.select("#mySVGtooltip_bar")
-				.append("svg")
-				.attr("width", tool_tip_bar_w)
-				.attr("height", tool_tip_bar_h)
-				.style("background", "rgba(0, 0, 0, 0.6)")
-				.style("border", "1px solid black")
-				.attr("fill-opacity", "1")
-				.style('z-index',3);
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 20)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Area: "+d);
-					
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 35)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Total Profit: "+data_one[d].toFixed(2));
-
-			tooltipbarSVG.append("text")
-					.attr("x", 5)
-					.attr("y", 50)
-					.attr("dy", ".35em")
-					.style("fill", "white")
-					.style('font-size', 13)
-					.text("\n Profit /order: "+(data_one[d]/orders[d]).toFixed(2));
-
-					
-    		
-    	})
-    	.on('mouseout', function(d, i) {
-    		
-    		d3.select(this)
-    			.style("stroke-width", 0.5);
-
-    		tool_tip_bar.hide();
-
-
-
-    	});
-/////////
-}
-
 function calculate_speed(branch_name){
 
 	var dt = 0, //distance total
@@ -924,7 +606,6 @@ function update_total_cost(divId="driver_map", actualDivId='preliminary_delivery
 	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
 	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
 	var distance_km = parseFloat(document.getElementById(divId).querySelector("#distance_km").value);
-	var max_cost = 1
 	var profit = 0;
 
 	var delivery_fee = (base) + (rate * distance_km)
@@ -945,6 +626,8 @@ function update_total_cost(divId="driver_map", actualDivId='preliminary_delivery
 	document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
 	document.getElementById(profitDivId).innerHTML = (processed_delivery_fee-actual_cost).toFixed(3);
 	document.getElementById(actualCostDivId).innerHTML = actual_cost.toFixed(3);
+
+	update_profit_chart();
 	
 }
 
