@@ -290,7 +290,7 @@ function draw_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"
 
 
 	});
-	console.log(total_profits_sum)
+	
 
 	//Array.apply(null, {length: n}).map((d,i) => (isFinite(cost_minus_base/i) ? (cost_minus_base/i) : 0.0).toFixed(2))
     chartData = {
@@ -418,7 +418,7 @@ function update_profit_chart(divId="driver_map", rateDivId="rate_comparison_char
 
 
 	});
-	console.log(total_profits_sum)
+
 
 	chartData.datasets[1].data = profits
 	//chartData.datasets[0].data = rates
