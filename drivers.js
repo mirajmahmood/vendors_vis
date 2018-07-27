@@ -322,6 +322,9 @@ function draw_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"
             display: true,
             text: 'Profit vs. Number of Orders Per Distance'
           },
+          legend: {
+            display: true,
+          },
           scales: {
             xAxes: [{
               display: true,
@@ -419,6 +422,9 @@ function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_co
 
 	chartData.datasets[1].data = profits
 	chartData.datasets[0].data = []
+	myMixedChart.options.legend.display = false
+	myMixedChart.options.scales.yAxes[1].display = false
+	myMixedChart.options.title.text = "Profit vs Distance"
 	myMixedChart.update();
 
     var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
@@ -472,11 +478,12 @@ function update_profit_per_orders_chart(divId="driver_map", rateDivId="rate_comp
 
 	chartData.datasets[1].data = profits
 	chartData.datasets[0].data = number_of_orders
+	myMixedChart.options.legend.display = true
+	myMixedChart.options.scales.yAxes[1].display = true
+	myMixedChart.options.title.text = "Profit vs Number of Orders Per Distance"
 	myMixedChart.update();
 
     var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
-
-	
 
 	ctx_text.clearRect(0,0,450,80)
 	ctx_text.fillText('Projected profit: '+ total_profits_sum.toFixed(3)+ " KD", 20, 50);
