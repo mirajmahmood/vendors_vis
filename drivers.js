@@ -284,15 +284,14 @@ function draw_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"
 			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
 		}
 
-		profits.push(((processed_delivery_fee-actual_cost)*number_of_orders[i]).toFixed(3));
+		profits.push(((processed_delivery_fee-actual_cost)).toFixed(3));
 		total_profits_sum += ((processed_delivery_fee-actual_cost)*number_of_orders[i])
-		//rates.push(rate*distance)
+
 
 
 	});
 	
 
-	//Array.apply(null, {length: n}).map((d,i) => (isFinite(cost_minus_base/i) ? (cost_minus_base/i) : 0.0).toFixed(2))
     chartData = {
       xLabels: distances, 
       datasets: [{
@@ -376,7 +375,59 @@ function draw_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"
 	ctx_text.stroke();
 }
 
-function update_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"){
+function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_comparison_chart"){
+	var n = 19;
+	var profits = [],
+		total_profits_sum = 0,
+		number_of_orders = Array.apply(null, {length: n}).map((d,i) => 0)
+
+	var distances = Array.apply(null, {length: n}).map((d,i) => i)
+
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+
+	var cost_minus_base = max_cost - base
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+	Object.keys(json_obj).forEach(function(branch){
+		Object.keys(json_obj[branch]).forEach(function(customer_location){
+			var dist = Math.floor(json_obj[branch][customer_location]['distance']/1000)
+			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
+		});
+	});
+
+	distances.forEach(function(distance, i){
+
+		var delivery_fee = (base) + (rate * distance)
+
+		var actual_cost = (actual_rate * distance)
+		var processed_delivery_fee = 0 
+
+		if (delivery_fee > max_cost){
+			processed_delivery_fee = max_cost;
+		}
+		else{
+			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+		}
+
+		profits.push(((processed_delivery_fee-actual_cost)).toFixed(3));
+
+
+	});
+
+
+	chartData.datasets[1].data = profits
+	chartData.datasets[0].data = []
+	myMixedChart.update();
+
+    var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
+
+	ctx_text.clearRect(0,0,450,80)
+
+
+}
+function update_profit_per_orders_chart(divId="driver_map", rateDivId="rate_comparison_chart"){
 	var n = 19;
 	var profits = [],
 		total_profits_sum = 0,
@@ -414,21 +465,20 @@ function update_profit_chart(divId="driver_map", rateDivId="rate_comparison_char
 
 		profits.push(((processed_delivery_fee-actual_cost)*number_of_orders[i]).toFixed(3));
 		total_profits_sum += ((processed_delivery_fee-actual_cost)*number_of_orders[i])
-		//rates.push(rate*distance)
 
 
 	});
 
 
 	chartData.datasets[1].data = profits
-	//chartData.datasets[0].data = rates
+	chartData.datasets[0].data = number_of_orders
 	myMixedChart.update();
 
     var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
 
 	
 
-	ctx_text.clearRect(0,0,450,50)
+	ctx_text.clearRect(0,0,450,80)
 	ctx_text.fillText('Projected profit: '+ total_profits_sum.toFixed(3)+ " KD", 20, 50);
 
 	ctx_text.fill();
@@ -627,7 +677,7 @@ function update_total_cost(divId="driver_map", actualDivId='preliminary_delivery
 	document.getElementById(profitDivId).innerHTML = (processed_delivery_fee-actual_cost).toFixed(3);
 	document.getElementById(actualCostDivId).innerHTML = actual_cost.toFixed(3);
 
-	update_profit_chart();
+	update_profit_per_orders_chart();
 	
 }
 
