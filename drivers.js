@@ -424,7 +424,7 @@ function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_co
 	chartData.datasets[0].data = []
 	myMixedChart.options.legend.display = false
 	myMixedChart.options.scales.yAxes[1].display = false
-	myMixedChart.options.title.text = "Profit vs Distance"
+	myMixedChart.options.title.text = "Profit Per Distance"
 	myMixedChart.update();
 
     var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
