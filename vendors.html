@@ -161,7 +161,7 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 
 <br><br>
 <div id="rate_comparison_chart" style='display: none;'>
-<button style="padding:5px;" id="update_rate_comparison_chart" onclick="javascript:update_rate_comparison_chart(value);" value="profit_per_delivery"> Profits per delivery</button>
+<button style="padding:5px;" id="update_rate_comparison_chart" onclick="javascript:update_rate_comparison_chart(value);" value="profit_per_delivery"> View profits per delivery</button>
 <canvas id="canvas"></canvas>
 <canvas id="canvas_text"></canvas>
 </div>
@@ -176,12 +176,12 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 		var element = document.getElementById("update_rate_comparison_chart");
 		if (value == "profit_per_delivery"){
 			element.value = "profit_per_orders"
-			element.innerText = "Profits per order"
+			element.innerText = "View profits vs order"
 			update_profit_per_delivery_chart();
 		}
 		else if (value == "profit_per_orders"){
 			element.value = "profit_per_delivery"
-			element.innerText = "Profits per delivery"
+			element.innerText = "View profits per delivery"
 			update_profit_per_orders_chart();
 		}
 		

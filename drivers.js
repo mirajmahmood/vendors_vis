@@ -304,7 +304,7 @@ function draw_profit_chart(divId="driver_map", rateDivId="rate_comparison_chart"
         yAxisID: 'rate-y-axis'
       }, {
         type: 'bar',
-        label: 'Profits',
+        label: 'Profit',
         backgroundColor: 'rgb(54, 162, 235)',
         data: profits,
         yAxisID: 'profit-y-axis',
@@ -424,7 +424,7 @@ function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_co
 	chartData.datasets[0].data = []
 	myMixedChart.options.legend.display = false
 	myMixedChart.options.scales.yAxes[1].display = false
-	myMixedChart.options.title.text = "Profit Per Distance"
+	myMixedChart.options.title.text = "Profit Per Delivery"
 	myMixedChart.update();
 
     var ctx_text = document.getElementById(rateDivId).querySelector("#canvas_text").getContext('2d');
