@@ -297,7 +297,7 @@ function draw_profit_chart_vendor(divId="driver_map", rateDivId="rate_comparison
 
 	Object.keys(json_obj).forEach(function(branch){
 		Object.keys(json_obj[branch]).forEach(function(customer_location){
-			var dist = Math.floor(json_obj[branch][customer_location]['distance']/1000)
+			var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
 			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
 		});
 	});
@@ -425,7 +425,7 @@ function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_co
 
 	Object.keys(json_obj).forEach(function(branch){
 		Object.keys(json_obj[branch]).forEach(function(customer_location){
-			var dist = Math.floor(json_obj[branch][customer_location]['distance']/1000)
+			var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
 			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
 		});
 	});
@@ -478,7 +478,7 @@ function update_profit_per_orders_chart(divId="driver_map", rateDivId="rate_comp
 
 	Object.keys(json_obj).forEach(function(branch){
 		Object.keys(json_obj[branch]).forEach(function(customer_location){
-			var dist = Math.floor(json_obj[branch][customer_location]['distance']/1000)
+			var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
 			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
 		});
 	});
@@ -791,7 +791,6 @@ function update_custom_pickup_profit_per_delivery_chart(divId="driver_map", rate
 		}
 		if (delivery_fee > cap_value){
 			processed_delivery_fee = (Math.floor((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
-			//cap_value = processed_delivery_fee
 		}
 		else{
 			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
