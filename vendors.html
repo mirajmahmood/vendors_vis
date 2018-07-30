@@ -62,6 +62,7 @@
         #driver_map #table_details {width:40%; float: right; padding-left: 10px;}
         #driver_map #table_div{display: flex;}
         #driver_map #rate_comparison_chart{width: 60%;}
+        #driver_map #custom_pickup_rate_comparison_chart{width: 60%;}
 
 
     </style>
@@ -119,6 +120,11 @@
 </div>
 
 <div id='driver_map'>
+	<div id='controls' style="padding-bottom:15px">
+
+	 	<input type='radio' checked="checked" value="vendors" name="delivery_type" onclick="javascript:toggle_delivery_type('vendors');"> Vendors</input>
+	 	<input type='radio'  name="delivery_type" value="custom_pickup" onclick="javascript:toggle_delivery_type('custom_pick_up');"> Custom pick up</input>
+	</div>
 <h3 style="text-decoration: underline; display: inline;" >Driver</h3> &nbsp
 
 <select onchange="javascript:update_input_field(value); update_table();">
@@ -136,42 +142,68 @@
 
 Delivery fee = Base cost + ( Rate x Distance ) <br/> <br/>
 
-Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(); update_total_cost();"/> + (
-<input id="rate_km" value="" onchange="javascript:update_table(); update_total_cost();"/> x 
-<input id="distance_km" value="1" onchange="javascript:update_total_cost();"/> )
+Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table();"/> + (
+<input id="rate_km" value="" onchange="javascript:update_table();"/> x 
+<input id="distance_km" value="1" onchange="javascript:update_table();"/> )
 
  <br/><br/>
 
-<label>Preliminary delivery fee: </label> <div id="preliminary_delivery_fee" style='display: inline'></div>  <br/><br/><br/>
+<label>Preliminary delivery fee: </label> <div id="preliminary_delivery_fee" style='display: inline'></div>  <br/><br/>
+<label>Cap: </label> <div id="cap" style='display: inline'></div>  <br/><br/><br/>
 
 <label style="font-weight: bold;">Delivery fee: </label> <div id="processed_delivery_fee" style='display: inline'></div> <br/> <br/>
 <label style="font-weight: bold;">Actual cost: </label> <div id="actual_fee_cost" style='display: inline'></div>  <br/><br/>
 <label style="font-weight: bold;">Profit (per delivery): </label> <div id="delivery_fee_profit" style='display: inline'></div>
 <br/><br/>
 
- <div id="rate"> </div> 
+<div id="driver_vendors">
 
- <div id='controls' style="padding-top:10px">
+	 <div id='controls' style="padding-top:10px">
 
- 	<button style="padding:5px;" onclick="javascript:toggle_driver_view();"> Toggle view</button>
- 	<button style="padding:5px;" onclick="javascript:view_rates();"> View rates</button>
+	 	<button style="padding:5px;" onclick="javascript:toggle_driver_view();"> Toggle view</button>
+	 	<button style="padding:5px;" onclick="javascript:view_rates();"> View rates</button>
+	</div>
+	<div id='tables'></div>
+
+
+	<br><br>
+	<div id="rate_comparison_chart" style='display: none;'>
+	<button style="padding:5px;" id="update_rate_comparison_chart" onclick="javascript:update_rate_comparison_chart(value);" value="profit_per_delivery"> View profits per delivery</button>
+	<canvas id="canvas"></canvas>
+	<canvas id="canvas_text"></canvas>
+	</div>
+	<div id="view_rates" style='display: none'>
+		
+	</div>
+
 </div>
-<div id='tables'></div>
-
-
-<br><br>
-<div id="rate_comparison_chart" style='display: none;'>
-<button style="padding:5px;" id="update_rate_comparison_chart" onclick="javascript:update_rate_comparison_chart(value);" value="profit_per_delivery"> View profits per delivery</button>
-<canvas id="canvas"></canvas>
-<canvas id="canvas_text"></canvas>
-</div>
-<div id="view_rates" style='display: none'>
+<div id="driver_custom_pickup">
+	<div id="custom_pickup_rate_comparison_chart">
 	
+	<canvas id="canvas_custom_pickup"></canvas>
+	<canvas id="canvas_text_custom_pickup"></canvas>
+	</div>
+	<div id="custom_pickup_view_rates" style='display: none'>
+		
+	</div>
 </div>
-
-
 <script type="text/javascript">
 
+	function toggle_delivery_type(value){
+		var driver_vendors = document.getElementById("driver_vendors");
+		var driver_custom_pickup = document.getElementById("driver_custom_pickup");
+
+		if (value == "custom_pick_up"){
+			driver_vendors.style.display = 'none'
+			driver_custom_pickup.style.display = ''
+			update_driver_custom_pickup()
+		}
+		else if (value == "vendors"){
+			driver_vendors.style.display = ''
+			driver_custom_pickup.style.display = 'none'	
+			update_driver_vendor();
+		}
+	}
 	function update_rate_comparison_chart(value){
 		var element = document.getElementById("update_rate_comparison_chart");
 		if (value == "profit_per_delivery"){
