@@ -8,14 +8,19 @@ var speeds = {}
 var rates = {}
 var caps = []
 var rate = 0
+var rate_min = 0
 var max_cost = 1
-var max_dist = 19
+var max_dist = 0
+var max_buy = 5
 
 var myMixedChart_vendor = null;
 var chartData_vendor = {}
 
 var myMixedChart_custom_pickup = null;
 var chartData_custom_pickup = {}
+
+var myMixedChart_custom_buy = null;
+var chartData_custom_buy = {}
 
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
@@ -41,13 +46,64 @@ function update_json(errors, driverData){
 	var cost = document.getElementById(divId).querySelector("#cost").value;
 
 	json_obj = driverData;
+
+	Object.keys(json_obj).forEach(function(branch){
+	Object.keys(json_obj[branch]).forEach(function(customer_location){
+
+		var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
+		if (dist > max_dist){
+				max_dist = dist
+			}
+		})
+	})
+
+	caps = Array.apply(0, {length: max_dist})
+	Object.keys(json_obj).forEach(function(branch){
+		Object.keys(json_obj[branch]).forEach(function(customer_location){
+
+			var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
+			if (dist > max_dist){
+				max_dist = dist
+			}
+			if (caps[dist] == null){
+				caps[dist] = json_obj[branch][customer_location]['cap']
+
+			}
+			else{
+				caps[dist] += json_obj[branch][customer_location]['cap']
+				caps[dist] = parseFloat(caps[dist]/2)
+			}
+			
+			
+
+		})
+	});
+	max_dist = Math.round(max_dist)
+	caps = caps.map(
+	function(d,i){
+		if (d==null){
+			if (i!=caps.length-1){
+				if (caps[i+1]==null){
+
+					return d3.max(caps)
+				}
+				return caps[i+1]
+				
+			}
+			return d3.max(caps)
+		} 
+			
+		return d
+			
+	})
 	draw_profit_chart_vendor();
 	draw_profit_chart_custom_pickup();
-
+	draw_profit_chart_custom_buy();
 	update_table();
 
 	calculate_rates(cost);
 	document.getElementById(divId).querySelector("#rate_km").value = rate.toFixed(3);
+	document.getElementById(divId).querySelector("#rate_min").value = rate_min.toFixed(3);
 
 	var delivery_type = document.querySelector('input[name=delivery_type]:checked').value;
 
@@ -58,21 +114,28 @@ function update_json(errors, driverData){
 		
 		update_driver_custom_pickup(divId);
 	}
+	else if (delivery_type == "custom_buy"){
+		
+		update_driver_custom_buy(divId);
+	}
+
+
 
 
 }
 function get_drivers(divId){
 	
 	var base = document.getElementById(divId).querySelector("#base").value;
-	var driver_url = "https://query.data.world/s/xdmszigr3cwntlf4jqkfz3tivuwe2e";
+	var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5";
 	draw_view_rates(base)
-	caps = Array.apply(0, {length: max_dist})
 	d3.queue()
 	    .defer(d3.json, driver_url)
 	    .await(update_json);
 }
 
-
+function update_input_field(value){
+	document.getElementById("driver_map").querySelector("#cost").value = value;
+}
 function update_table(divId="driver_map"){
 
 	var table_headers_html = "<thead><tr><th>Vendor</th><th>Customer Location</th><th>Avg. Time to Customer</th><th>Cost(avg time)</th><th>Distance(km)</th><th>Cost(avg distance)</th><th>Travelling time</th><th>Number of Orders</th></tr></thead>";
@@ -126,23 +189,6 @@ function update_table(divId="driver_map"){
 			table_body_html += "<tr>" + row + "</tr>";
 
 			
-			var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
-			
-			if (caps[dist] == null){
-				caps[dist] = json_obj[branch][customer_location]['cap']
-			}
-			else{
-				caps[dist] += json_obj[branch][customer_location]['cap']
-				caps[dist] = parseFloat(caps[dist]/2)
-			}
-
-			caps = caps.map(
-				function(d,i){
-					if ((d==null) && (i!=caps.length-1)){
-						return caps[i+1]
-					}
-					return d
-				})
 										
 		});
 		table_body_html += "</tbody>";
@@ -200,16 +246,15 @@ function update_table(divId="driver_map"){
 		
 		update_driver_custom_pickup(divId);
 	}
+	else if (delivery_type == "custom_buy"){
+		
+		update_driver_custom_buy(divId);
+	}
 	
 	
 
 }
 
-
-
-function update_input_field(value){
-	document.getElementById("driver_map").querySelector("#cost").value = value;
-}
 function draw_view_rates(base, divId="view_rates"){
 
 		var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -413,8 +458,7 @@ function draw_profit_chart_vendor(divId="driver_map", rateDivId="rate_comparison
 function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_comparison_chart", capDivId='cap'){
 	var n = max_dist;
 	var profits = [],
-		total_profits_sum = 0,
-		number_of_orders = Array.apply(null, {length: n}).map((d,i) => 0)
+		total_profits_sum = 0;
 
 	var distances = Array.apply(null, {length: n}).map((d,i) => i)
 
@@ -422,13 +466,6 @@ function update_profit_per_delivery_chart(divId="driver_map", rateDivId="rate_co
 
 	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
 	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
-
-	Object.keys(json_obj).forEach(function(branch){
-		Object.keys(json_obj[branch]).forEach(function(customer_location){
-			var dist = Math.round(json_obj[branch][customer_location]['distance']/1000)
-			number_of_orders[dist] += json_obj[branch][customer_location]['order_num']
-		});
-	});
 
 	distances.forEach(function(distance, i){
 
@@ -665,7 +702,7 @@ function calculate_speed(branch_name){
 	speeds[branch_name] = (sum_speed_w/sum_of_weights)
 
 }
-function calculate_rates(cost, divId='actual_rate'){
+function calculate_rates(cost, divId='actual_rate', rateMinDivId="rate_per_minute"){
 
 	var speeds_sum = 0,
 		rates_sum = 0;
@@ -680,8 +717,9 @@ function calculate_rates(cost, divId='actual_rate'){
 	var rate_avgs = rates_sum/Object.keys(rates).length
 
 	rate = actual_rate
+	rate_min = cost/60
 	document.getElementById(divId).innerHTML = rate.toFixed(3)
-	
+	document.getElementById(rateMinDivId).innerHTML = rate_min.toFixed(3)
 }
 
 function update_driver_vendor(divId="driver_map", actualDivId='preliminary_delivery_fee', processedDivId='processed_delivery_fee', profitDivId='delivery_fee_profit', actualCostDivId='actual_fee_cost', capDivId='cap'){
@@ -767,7 +805,7 @@ function update_custom_pickup_profit_per_delivery_chart(divId="driver_map", rate
 	var n = max_dist;
 	var profits = [];
 	var dist_from_cap = [];
-	var delivery_fees = [];
+	var delivery_costs = [];
 	var distances = Array.apply(null, {length: n}).map((d,i) => i)
 
 	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
@@ -799,13 +837,13 @@ function update_custom_pickup_profit_per_delivery_chart(divId="driver_map", rate
 		var profit = processed_delivery_fee - actual_cost
 		profits.push(profit.toFixed(3))
 
-		delivery_fees.push(actual_cost.toFixed(3))
+		delivery_costs.push(actual_cost.toFixed(3))
 
 		dist_from_cap.push((cap_value-processed_delivery_fee ).toFixed(3))
 
 	})
 
-	chartData_custom_pickup.datasets[0].data = delivery_fees
+	chartData_custom_pickup.datasets[0].data = delivery_costs
 	chartData_custom_pickup.datasets[1].data = profits
 	chartData_custom_pickup.datasets[2].data = dist_from_cap
 	myMixedChart_custom_pickup.update();
@@ -817,7 +855,7 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
 	var n = max_dist;
 	var profits = [];
 	var dist_from_cap = [];
-	var delivery_fees = [];
+	var delivery_costs = [];
 	var distances = Array.apply(null, {length: n}).map((d,i) => i)
 
 	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
@@ -849,7 +887,7 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
 		var profit = (processed_delivery_fee - actual_cost)
 		profits.push(profit).toFixed(3)
 
-		delivery_fees.push(processed_delivery_fee - profit).toFixed(3)
+		delivery_costs.push(processed_delivery_fee - profit).toFixed(3)
 
 		dist_from_cap.push((cap_value-(processed_delivery_fee)).toFixed(3))
 	});
@@ -861,7 +899,7 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
         type: 'bar',
         label: 'Actual cost',
         backgroundColor: 'rgb(139,0,0)',
-        data: delivery_fees,
+        data: delivery_costs,
         yAxisID: 'profit-y-axis',
         borderColor: 'white',
         borderWidth: 2
@@ -929,6 +967,190 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
         }
       });
 
+}
+
+
+function update_driver_custom_buy(divId="driver_map", actualDivId='preliminary_delivery_fee', processedDivId='processed_delivery_fee', profitDivId='delivery_fee_profit', actualCostDivId='actual_fee_cost', capDivId='cap'){
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+	var distance_km = parseFloat(document.getElementById(divId).querySelector("#distance_km").value);
+	var profit = 0;
+	var rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_min").value);
+	var actual_rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_per_minute").innerHTML);
+	var minutes = parseFloat(document.getElementById(divId).querySelector("#minutes").value);
+	
+	var delivery_fee = (base) + (rate * distance_km) + (rate_min * minutes)
+	var actual_cost = (actual_rate * distance_km) + (actual_rate_min * minutes)
+	var processed_delivery_fee = 0 
+	
+	document.getElementById(actualDivId).innerHTML = delivery_fee.toFixed(3)
+
+	var processed_delivery_fee = 0 
+
+	if (delivery_fee > max_buy){
+		processed_delivery_fee = max_buy;
+	}
+	else{
+		processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+	}
+
+
+	document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
+	document.getElementById(profitDivId).innerHTML = (processed_delivery_fee-actual_cost).toFixed(3);
+	document.getElementById(actualCostDivId).innerHTML = actual_cost.toFixed(3);
+	document.getElementById(capDivId).innerHTML = max_buy.toFixed(3);
+
+	update_custom_buy_profit_per_delivery_chart();
+
+
+}
+function update_custom_buy_profit_per_delivery_chart(divId="driver_map", rateDivId="custom_buy_rate_comparison_chart", capDivId='cap'){
+	var n = max_dist;
+	var profits = [];
+	var dist_from_cap = [];
+	var delivery_costs = [];
+	var distances = Array.apply(null, {length: n}).map((d,i) => i)
+
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+	var rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_min").value);
+	var actual_rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_per_minute").innerHTML);
+
+	var minutes = parseFloat(document.getElementById(divId).querySelector("#minutes").value);
+	distances.forEach(function(distance, i){
+
+		var delivery_fee = (base) + (rate * distance) + (rate_min * minutes)
+		var actual_cost = (actual_rate * distance) + (actual_rate_min * minutes)
+		var processed_delivery_fee = 0 
+
+
+		if (delivery_fee > max_buy){
+			processed_delivery_fee = max_buy;
+		}
+		else{
+			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+		}
+
+		var profit = processed_delivery_fee - actual_cost
+		
+
+		delivery_costs.push(actual_cost.toFixed(3))
+		profits.push(profit.toFixed(3))
+
+	})
+
+	chartData_custom_buy.datasets[0].data = delivery_costs
+	chartData_custom_buy.datasets[1].data = profits
+	myMixedChart_custom_buy.update();
 
 }
 
+function draw_profit_chart_custom_buy(divId="driver_map", rateDivId="custom_buy_rate_comparison_chart", capDivId='cap'){
+	var n = max_dist;
+	var profits = [];
+	var delivery_costs = [];
+	var distances = Array.apply(null, {length: n}).map((d,i) => i)
+
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+	var rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_min").value);
+	var actual_rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_per_minute").innerHTML);
+
+	var minutes = parseFloat(document.getElementById(divId).querySelector("#minutes").value);
+
+	distances.forEach(function(distance, i){
+
+		var delivery_fee = (base) + (rate * distance) + (rate_min * minutes)
+
+		var actual_cost = (actual_rate * distance) + (actual_rate_min * minutes)
+		var processed_delivery_fee = 0 
+
+		if (delivery_fee > max_buy){
+			processed_delivery_fee = max_buy;
+		}
+		else{
+			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
+		}
+
+		var profit = (processed_delivery_fee - actual_cost)
+		profits.push(profit).toFixed(3)
+
+		delivery_costs.push(processed_delivery_fee - profit).toFixed(3)
+
+	});
+	
+
+    chartData_custom_buy = {
+      xLabels: distances, 
+      datasets: [{
+        type: 'bar',
+        label: 'Actual cost',
+        backgroundColor: 'rgb(139,0,0)',
+        data: delivery_costs,
+        yAxisID: 'profit-y-axis',
+        borderColor: 'white',
+        borderWidth: 2
+      },
+      {
+        type: 'bar',
+        label: 'Profit',
+        backgroundColor: 'rgb(55,192,203)',
+        data: profits,
+        yAxisID: 'profit-y-axis',
+        borderColor: 'white',
+        borderWidth: 2
+      }]
+    };
+	var ctx = document.getElementById(rateDivId).querySelector("#canvas_custom_buy").getContext('2d');
+    myMixedChart_custom_buy = new Chart(ctx, {
+        type: 'bar',
+        data: chartData_custom_buy,
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: 'Profit Per Delivery'
+          },
+          legend: {
+            display: true,
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              stacked: true, 
+              scaleLabel: {
+                display: true,
+                labelString: 'Distance (km)'
+              }
+            }],
+            yAxes: [{
+              type: 'linear',
+              position: 'left',
+              display: true,
+              stacked: true,
+              id: 'profit-y-axis',
+              scaleLabel: {
+                display: true,
+                labelString: 'Profit (KD)'
+              },
+              ticks: {
+                reverse: false
+              }
+            }]
+          },
+          tooltips: {
+            mode: 'index',
+            intersect: true
+          }
+        }
+      });
+
+
+}
