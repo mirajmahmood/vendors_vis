@@ -11,7 +11,7 @@ var rate = 0
 var rate_min = 0
 var max_cost = 1
 var max_dist = 0
-var max_buy = 5
+var max_buy = 8
 
 var myMixedChart_vendor = null;
 var chartData_vendor = {}
@@ -127,6 +127,7 @@ function get_drivers(divId){
 	
 	var base = document.getElementById(divId).querySelector("#base").value;
 	var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5";
+	// var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
 	draw_view_rates(base)
 	d3.queue()
 	    .defer(d3.json, driver_url)
