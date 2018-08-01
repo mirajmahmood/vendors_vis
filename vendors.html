@@ -145,7 +145,7 @@
 Delivery fee = Base cost + ( Rate x Distance ) <div id="driver_custom_buy_equations" style='display: none;'> + ( Rate x minutes )</div><br/> <br/>
 
 Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table();"/> + (
-<input id="rate_km" value="" onchange="javascript:update_table();"/> x 
+<input id="rate_km" value="0.046" onchange="javascript:update_table();"/> x 
 <input id="distance_km" value="1" onchange="javascript:update_table();"/> )
 <div id="driver_custom_buy_equations_input" style='display: none;'>
 + (
@@ -218,24 +218,24 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 			driver_vendors.style.display = 'none'
 			driver_custom_pickup.style.display = ''
 			driver_custom_buy.style.display = 'none'
-			driver_custom_buy_equations.style.display = 'none'
-			driver_custom_buy_equations_input.style.display = 'none'
+			// driver_custom_buy_equations.style.display = 'none'
+			// driver_custom_buy_equations_input.style.display = 'none'
 			update_driver_custom_pickup()
 		}
 		else if (value == "vendors"){
 			driver_vendors.style.display = ''
 			driver_custom_pickup.style.display = 'none'	
 			driver_custom_buy.style.display = 'none'
-			driver_custom_buy_equations.style.display = 'none'
-			driver_custom_buy_equations_input.style.display = 'none'
+			// driver_custom_buy_equations.style.display = 'none'
+			// driver_custom_buy_equations_input.style.display = 'none'
 			update_driver_vendor();
 		}
 		else if (value == "custom_buy"){
 			driver_vendors.style.display = 'none'
 			driver_custom_pickup.style.display = 'none'	
 			driver_custom_buy.style.display = ''
-			driver_custom_buy_equations.style.display = 'inline'
-			driver_custom_buy_equations_input.style.display = 'inline'
+			// driver_custom_buy_equations.style.display = 'inline'
+			// driver_custom_buy_equations_input.style.display = 'inline'
 			update_driver_custom_buy();
 		}
 	}

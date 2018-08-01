@@ -93,7 +93,7 @@ function update_json(errors, driverData){
 			return d3.max(caps)
 		} 
 			
-		return d
+		return 2.5
 			
 	})
 	draw_profit_chart_vendor();
@@ -126,8 +126,8 @@ function update_json(errors, driverData){
 function get_drivers(divId){
 	
 	var base = document.getElementById(divId).querySelector("#base").value;
-	var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5";
-	// var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
+	// var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5"; //driver json url
+	var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
 	draw_view_rates(base)
 	d3.queue()
 	    .defer(d3.json, driver_url)
@@ -172,11 +172,11 @@ function update_table(divId="driver_map"){
 			//average time to customer
 			row += "<td id='avg_time_order'>" + avg_time_order.toFixed(2) + "</td>";
 			//average cost per order per hour
-			row += "<td id='cost_per_order_per_hour'>" + (cost_per_min*avg_time_order).toFixed(2) + "</td>";
+			row += "<td id='cost_per_order_per_hour'>" + (cost_per_min*avg_time_order).toFixed(3) + "</td>";
 			//distance to customer
 			row += "<td id='distance_to_customer'>" + parseFloat(json_obj[branch][customer_location]['distance']/1000).toFixed(2) + "</td>";
 			//cost per order per km
-			row += "<td id='cost_per_order_per_km'>" + (rate_km*parseFloat(json_obj[branch][customer_location]['distance']/1000)).toFixed(2) + "</td>";
+			row += "<td id='cost_per_order_per_km'>" + (rate_km*parseFloat(json_obj[branch][customer_location]['distance']/1000)).toFixed(3) + "</td>";
 			//time travel to customer
 			row += "<td id='time_travel_to_customer'>" + (json_obj[branch][customer_location]['duration']/60).toFixed(2) + "</td>";
 			//number of orders
@@ -780,18 +780,18 @@ function update_driver_custom_pickup(divId="driver_map", actualDivId='preliminar
 	var processed_delivery_fee = 0 
 
 	distance_km_cap = Math.round(distance_km)
-	if (distance_km_cap > caps.length-1){
-		cap_value = caps.slice(-1)[0]
-	}
-	else{
-		cap_value = caps[distance_km_cap]
-	}
-	if (delivery_fee > cap_value){
-		processed_delivery_fee = (Math.floor((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
-	}
-	else{
+	// if (distance_km_cap > caps.length-1){
+	// 	cap_value = caps.slice(-1)[0]
+	// }
+	// else{
+	// 	cap_value = caps[distance_km_cap]
+	// }
+	// if (delivery_fee > cap_value){
+	// 	processed_delivery_fee = (Math.floor((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
+	// }
+	// else{
 		processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
-	}
+	// }
 
 	document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
 	document.getElementById(profitDivId).innerHTML = (processed_delivery_fee-actual_cost).toFixed(3);
@@ -821,26 +821,26 @@ function update_custom_pickup_profit_per_delivery_chart(divId="driver_map", rate
 		var actual_cost = (actual_rate * distance)
 		var processed_delivery_fee = 0 
 
-		distance_km_cap = Math.round(distance)
-		if (distance_km_cap > caps.length-1){
-			cap_value = caps.slice(-1)[0]
-		}
-		else{
-			cap_value = caps[distance_km_cap]
-		}
-		if (delivery_fee > cap_value){
-			processed_delivery_fee = (Math.floor((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
-		}
-		else{
+		// distance_km_cap = Math.round(distance)
+		// if (distance_km_cap > caps.length-1){
+		// 	cap_value = caps.slice(-1)[0]
+		// }
+		// else{
+		// 	cap_value = caps[distance_km_cap]
+		// }
+		// if (delivery_fee > cap_value){
+		// 	processed_delivery_fee = (Math.floor((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
+		// }
+		// else{
 			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
-		}
+		// }
 
 		var profit = processed_delivery_fee - actual_cost
 		profits.push(profit.toFixed(3))
 
 		delivery_costs.push(actual_cost.toFixed(3))
 
-		dist_from_cap.push((cap_value-processed_delivery_fee ).toFixed(3))
+		// dist_from_cap.push((cap_value-processed_delivery_fee ).toFixed(3))
 
 	})
 
@@ -872,25 +872,25 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
 		var actual_cost = (actual_rate * distance)
 		var processed_delivery_fee = 0 
 
-		distance_km_cap = Math.round(distance)
-		if (distance_km_cap > caps.length-1){
-			cap_value = caps.slice(-1)[0]
-		}
-		else{
-			cap_value = caps[distance_km_cap]
-		}
-		if (delivery_fee > cap_value){
-			processed_delivery_fee = (Math.ceil((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
-		}
-		else{
+		// distance_km_cap = Math.round(distance)
+		// if (distance_km_cap > caps.length-1){
+		// 	cap_value = caps.slice(-1)[0]
+		// }
+		// else{
+		// 	cap_value = caps[distance_km_cap]
+		// }
+		// if (delivery_fee > cap_value){
+		// 	processed_delivery_fee = (Math.ceil((cap_value.toFixed(3) * 1000) /50 ) * 50)/1000
+		// }
+		// else{
 			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
-		}
+		// }
 		var profit = (processed_delivery_fee - actual_cost)
 		profits.push(profit).toFixed(3)
 
 		delivery_costs.push(processed_delivery_fee - profit).toFixed(3)
 
-		dist_from_cap.push((cap_value-(processed_delivery_fee)).toFixed(3))
+		// dist_from_cap.push((cap_value-(processed_delivery_fee)).toFixed(3))
 	});
 	
 
@@ -989,12 +989,12 @@ function update_driver_custom_buy(divId="driver_map", actualDivId='preliminary_d
 
 	var processed_delivery_fee = 0 
 
-	if (delivery_fee > max_buy){
-		processed_delivery_fee = max_buy;
-	}
-	else{
+	// if (delivery_fee > max_buy){
+	// 	processed_delivery_fee = max_buy;
+	// }
+	// else{
 		processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
-	}
+	// }
 
 
 	document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
@@ -1029,12 +1029,12 @@ function update_custom_buy_profit_per_delivery_chart(divId="driver_map", rateDiv
 		var processed_delivery_fee = 0 
 
 
-		if (delivery_fee > max_buy){
-			processed_delivery_fee = max_buy;
-		}
-		else{
+		// if (delivery_fee > max_buy){
+		// 	processed_delivery_fee = max_buy;
+		// }
+		// else{
 			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
-		}
+		// }
 
 		var profit = processed_delivery_fee - actual_cost
 		
@@ -1068,17 +1068,17 @@ function draw_profit_chart_custom_buy(divId="driver_map", rateDivId="custom_buy_
 
 	distances.forEach(function(distance, i){
 
-		var delivery_fee = (base) + (rate * distance) + (rate_min * minutes)
+		var delivery_fee = (base) + (rate * distance)// + (rate_min * minutes)
 
-		var actual_cost = (actual_rate * distance) + (actual_rate_min * minutes)
+		var actual_cost = (actual_rate * distance)// + (actual_rate_min * minutes)
 		var processed_delivery_fee = 0 
 
-		if (delivery_fee > max_buy){
-			processed_delivery_fee = max_buy;
-		}
-		else{
+		// if (delivery_fee > max_buy){
+		// 	processed_delivery_fee = max_buy;
+		// }
+		// else{
 			processed_delivery_fee = (Math.ceil((delivery_fee.toFixed(3) * 1000) /50 ) * 50)/1000
-		}
+		// }
 
 		var profit = (processed_delivery_fee - actual_cost)
 		profits.push(profit).toFixed(3)
