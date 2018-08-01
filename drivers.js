@@ -11,7 +11,7 @@ var rate = 0
 var rate_min = 0
 var max_cost = 1
 var max_dist = 0
-var max_buy = 5
+var max_buy = 7
 
 var myMixedChart_vendor = null;
 var chartData_vendor = {}
