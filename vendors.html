@@ -65,6 +65,8 @@
         #driver_map #custom_pickup_rate_comparison_chart{width: 60%;}
         #driver_map #custom_buy_rate_comparison_chart{width: 60%;}
 
+        #driver_map #custom_pickup_div{display: flex;}
+
     </style>
 </head>
 <body>
@@ -186,9 +188,10 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 </div>
 <div id="driver_custom_pickup">
 	<div id="custom_pickup_rate_comparison_chart">
-	
-	<canvas id="canvas_custom_pickup"></canvas>
-	<canvas id="canvas_text_custom_pickup"></canvas>
+	<div id='custom_pickup_div'>
+		<canvas id="canvas_custom_pickup"></canvas>
+
+	</div>
 	</div>
 	<div id="custom_pickup_view_rates" style='display: none'>
 		
@@ -480,3 +483,4 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 </script>
 </body>
 </html>
+

@@ -846,7 +846,7 @@ function update_custom_pickup_profit_per_delivery_chart(divId="driver_map", rate
 
 	chartData_custom_pickup.datasets[0].data = delivery_costs
 	chartData_custom_pickup.datasets[1].data = profits
-	chartData_custom_pickup.datasets[2].data = dist_from_cap
+	//chartData_custom_pickup.datasets[2].data = dist_from_cap
 	myMixedChart_custom_pickup.update();
 
 
@@ -914,15 +914,16 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
         borderColor: 'white',
         borderWidth: 2
       },
-      {
-        type: 'bar',
-        label: 'Distance from cap',
-        backgroundColor: 'rgb(115,212,135)',
-        data: dist_from_cap,
-        yAxisID: 'profit-y-axis',
-        borderColor: 'white',
-        borderWidth: 2
-      }]
+      // {
+      //   type: 'bar',
+      //   label: 'Distance from cap',
+      //   backgroundColor: 'rgb(115,212,135)',
+      //   data: dist_from_cap,
+      //   yAxisID: 'profit-y-axis',
+      //   borderColor: 'white',
+      //   borderWidth: 2
+      // }
+      ]
     };
 	var ctx = document.getElementById(rateDivId).querySelector("#canvas_custom_pickup").getContext('2d');
     myMixedChart_custom_pickup = new Chart(ctx, {
@@ -954,7 +955,7 @@ function draw_profit_chart_custom_pickup(divId="driver_map", rateDivId="custom_p
               id: 'profit-y-axis',
               scaleLabel: {
                 display: true,
-                labelString: 'Profit (KD)'
+                labelString: 'Delivery fee (KD)'
               },
               ticks: {
                 reverse: false
@@ -1139,7 +1140,7 @@ function draw_profit_chart_custom_buy(divId="driver_map", rateDivId="custom_buy_
               id: 'profit-y-axis',
               scaleLabel: {
                 display: true,
-                labelString: 'Profit (KD)'
+                labelString: 'Delivery fee (KD)'
               },
               ticks: {
                 reverse: false
