@@ -66,11 +66,11 @@ function update_json(errors, driverData){
 				max_dist = dist
 			}
 			if (caps[dist] == null){
-				caps[dist] = json_obj[branch][customer_location]['cap']
+				caps[dist] = json_obj[branch][customer_location]['cap'] + 0.5
 
 			}
 			else{
-				caps[dist] += json_obj[branch][customer_location]['cap']
+				caps[dist] += json_obj[branch][customer_location]['cap'] + 0.5
 				caps[dist] = parseFloat(caps[dist]/2)
 			}
 			
