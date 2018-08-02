@@ -28,6 +28,7 @@ var chartData_custom_buy = {}
 var myMixedChart_comp_prices = [];
 var chartData_comp_prices = []
 
+var all_governorates = ["Al Asimah (Capital)", "Hawalli", "Farwaniya", "Mubarak Al-Kabeer", "Ahmadi", "Jahra"]
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
     var hrs = ~~(time / 3600);
@@ -1192,7 +1193,7 @@ function update_comp_prices_profit_per_delivery_chart(divId="driver_map", rateDi
 	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
 
 
-	var all_governorates = Object.keys(json_gov_distances)
+
 	var quick_del_rates = all_governorates.map(s =>
 		all_governorates.map(d => json_comp_prices[s][d]['quick_del'])
 		)
@@ -1232,7 +1233,7 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
 
 
-	var all_governorates = Object.keys(json_gov_distances)
+	
 	var quick_del_rates = all_governorates.map(s =>
 		all_governorates.map(d => json_comp_prices[s][d]['quick_del'])
 		)
