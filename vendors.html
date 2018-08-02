@@ -62,10 +62,14 @@
         #driver_map #table_details {width:40%; float: right; padding-left: 10px;}
         #driver_map #table_div{display: flex;}
         #driver_map #rate_comparison_chart{width: 60%;}
-        #driver_map #custom_pickup_rate_comparison_chart{width: 60%;}
-        #driver_map #custom_buy_rate_comparison_chart{width: 60%;}
+        #driver_map #custom_pickup_rate_comparison_chart{width: 50%;}
+        #driver_map #custom_buy_rate_comparison_chart{width: 50%;}
 
-        #driver_map #custom_pickup_div{display: flex;}
+        #driver_map #custom_pickup_rate_comparison_chart{display: flex;}
+        #driver_map #canvas_custom_pickup{width:50%;}
+        #driver_map #comp_prices_canvas{float: right; margin: 0 auto; width: 100%}
+        #driver_map #comp_prices_canvas canvas {width:500px;}
+        
 
     </style>
 </head>
@@ -186,26 +190,34 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 	</div>
 
 </div>
-<div id="driver_custom_pickup">
+<div id="driver_custom_pickup" style='display: none;'>
 	<div id="custom_pickup_rate_comparison_chart">
-	<div id='custom_pickup_div'>
-		<canvas id="canvas_custom_pickup"></canvas>
+
+	<canvas id="canvas_custom_pickup" ></canvas>
+
+	<div id="comp_prices_canvas" >
+		<canvas id="canvas_comp_prices0"></canvas>
+		<canvas id="canvas_comp_prices1"></canvas>
+		<canvas id="canvas_comp_prices2"></canvas>
+		<canvas id="canvas_comp_prices3"></canvas>
+		<canvas id="canvas_comp_prices4"></canvas>
+		<canvas id="canvas_comp_prices5"></canvas>
+	</div>
+
+
+
 
 	</div>
-	</div>
-	<div id="custom_pickup_view_rates" style='display: none'>
-		
-	</div>
+
 </div>
-<div id="driver_custom_buy">
+
+<div id="driver_custom_buy" style='display: none;'>
 	<div id="custom_buy_rate_comparison_chart">
 	
 	<canvas id="canvas_custom_buy"></canvas>
 	<canvas id="canvas_text_custom_buy"></canvas>
 	</div>
-	<div id="custom_buy_view_rates" style='display: none'>
-		
-	</div>
+
 </div>
 </div>
 <script type="text/javascript">

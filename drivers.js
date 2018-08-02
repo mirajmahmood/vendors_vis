@@ -1,4 +1,7 @@
 var json_obj = {}
+var json_gov_distances = {}
+var json_comp_prices = {}
+
 var orders = {}
 var rates_hour = {}
 var rates_distance = {}
@@ -22,6 +25,9 @@ var chartData_custom_pickup = {}
 var myMixedChart_custom_buy = null;
 var chartData_custom_buy = {}
 
+var myMixedChart_comp_prices = [];
+var chartData_comp_prices = []
+
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
     var hrs = ~~(time / 3600);
@@ -40,12 +46,14 @@ function fancyTimeFormat(time){
     return ret;
 }
 
-function update_json(errors, driverData){
+function update_json(errors, driverData, governorateData, comppricesData){
 
 	var divId = "driver_map"
 	var cost = document.getElementById(divId).querySelector("#cost").value;
 
 	json_obj = driverData;
+	json_gov_distances = governorateData;
+	json_comp_prices = comppricesData;
 
 	Object.keys(json_obj).forEach(function(branch){
 	Object.keys(json_obj[branch]).forEach(function(customer_location){
@@ -75,7 +83,6 @@ function update_json(errors, driverData){
 			}
 			
 			
-
 		})
 	});
 	max_dist = Math.round(max_dist)
@@ -99,6 +106,7 @@ function update_json(errors, driverData){
 	draw_profit_chart_vendor();
 	draw_profit_chart_custom_pickup();
 	draw_profit_chart_custom_buy();
+	draw_profit_chart_comp_prices();
 	update_table();
 
 	calculate_rates(cost);
@@ -113,6 +121,7 @@ function update_json(errors, driverData){
 	else if (delivery_type == "custom_pickup"){
 		
 		update_driver_custom_pickup(divId);
+		update_driver_comp_prices(divId);
 	}
 	else if (delivery_type == "custom_buy"){
 		
@@ -126,11 +135,18 @@ function update_json(errors, driverData){
 function get_drivers(divId){
 	
 	var base = document.getElementById(divId).querySelector("#base").value;
-	// var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5"; //driver json url
-	var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
+	var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5"; //driver json url
+	// var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
+
+	var governorate_distances_url = "https://query.data.world/s/affo6urz7ooceum4rcncsx6xrin2o7"
+	var competitor_prices_url = "https://query.data.world/s/ab6776mxj4rvz7ftgjfd3h5fpmwyy7"
+
 	draw_view_rates(base)
+
 	d3.queue()
 	    .defer(d3.json, driver_url)
+	    .defer(d3.json, governorate_distances_url)
+	    .defer(d3.json, competitor_prices_url)
 	    .await(update_json);
 }
 
@@ -188,7 +204,6 @@ function update_table(divId="driver_map"){
 			total_time += json_obj[branch][customer_location]['time_to_customer']
 			total_distance += json_obj[branch][customer_location]['distance'] * parseInt(json_obj[branch][customer_location]['order_num']);
 			table_body_html += "<tr>" + row + "</tr>";
-
 			
 										
 		});
@@ -246,6 +261,7 @@ function update_table(divId="driver_map"){
 	else if (delivery_type == "custom_pickup"){
 		
 		update_driver_custom_pickup(divId);
+		update_driver_comp_prices(divId);
 	}
 	else if (delivery_type == "custom_buy"){
 		
@@ -982,8 +998,8 @@ function update_driver_custom_buy(divId="driver_map", actualDivId='preliminary_d
 	var actual_rate_min = parseFloat(document.getElementById(divId).querySelector("#rate_per_minute").innerHTML);
 	var minutes = parseFloat(document.getElementById(divId).querySelector("#minutes").value);
 	
-	var delivery_fee = (base) + (rate * distance_km) + (rate_min * minutes)
-	var actual_cost = (actual_rate * distance_km) + (actual_rate_min * minutes)
+	var delivery_fee = (base) + (rate * distance_km)// + (rate_min * minutes)
+	var actual_cost = (actual_rate * distance_km)// + (actual_rate_min * minutes)
 	var processed_delivery_fee = 0 
 	
 	document.getElementById(actualDivId).innerHTML = delivery_fee.toFixed(3)
@@ -1025,8 +1041,8 @@ function update_custom_buy_profit_per_delivery_chart(divId="driver_map", rateDiv
 	var minutes = parseFloat(document.getElementById(divId).querySelector("#minutes").value);
 	distances.forEach(function(distance, i){
 
-		var delivery_fee = (base) + (rate * distance) + (rate_min * minutes)
-		var actual_cost = (actual_rate * distance) + (actual_rate_min * minutes)
+		var delivery_fee = (base) + (rate * distance)// + (rate_min * minutes)
+		var actual_cost = (actual_rate * distance)// + (actual_rate_min * minutes)
 		var processed_delivery_fee = 0 
 
 
@@ -1153,6 +1169,132 @@ function draw_profit_chart_custom_buy(divId="driver_map", rateDivId="custom_buy_
           }
         }
       });
+}
 
 
+function update_driver_comp_prices(divId="driver_map", actualDivId='preliminary_delivery_fee', processedDivId='processed_delivery_fee', profitDivId='delivery_fee_profit', actualCostDivId='actual_fee_cost', capDivId='cap'){
+
+
+	// document.getElementById(processedDivId).innerHTML = processed_delivery_fee.toFixed(3);
+	// document.getElementById(profitDivId).innerHTML = (processed_delivery_fee-actual_cost).toFixed(3);
+	// document.getElementById(actualCostDivId).innerHTML = actual_cost.toFixed(3);
+	// document.getElementById(capDivId).innerHTML = max_buy.toFixed(3);
+
+	update_comp_prices_profit_per_delivery_chart();
+
+
+}
+function update_comp_prices_profit_per_delivery_chart(divId="driver_map", rateDivId="custom_pickupz_rate_comparison_chart", capDivId='cap'){
+
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+
+	var all_governorates = Object.keys(json_gov_distances)
+	var quick_del_rates = all_governorates.map(s =>
+		all_governorates.map(d => json_comp_prices[s][d]['quick_del'])
+		)
+
+	var porter_ex_rates = all_governorates.map(s =>
+		all_governorates.map(d => json_comp_prices[s][d]['porter_ex'])
+		)
+
+	var del_ex_rates = all_governorates.map(s =>
+		all_governorates.map(d => json_comp_prices[s][d]['del_ex'])
+		)
+
+	var mashkor_rates = all_governorates.map(s =>
+		all_governorates.map(d => (base+(rate * parseFloat(json_gov_distances[s][d]['distance']))).toFixed(2)
+			)
+		)
+
+	all_governorates.forEach(function(source, i){
+		chartData_comp_prices[i].datasets[0].data = mashkor_rates[i]
+		chartData_comp_prices[i].datasets[1].data = quick_del_rates[i]
+		chartData_comp_prices[i].datasets[2].data = porter_ex_rates[i]
+		chartData_comp_prices[i].datasets[3].data = del_ex_rates[i]
+
+		myMixedChart_comp_prices[i].update();
+
+	})
+	
+
+}
+
+function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pickup_rate_comparison_chart", capDivId='cap'){
+
+	var n = 6
+	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
+
+	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
+	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
+
+
+	var all_governorates = Object.keys(json_gov_distances)
+	var quick_del_rates = all_governorates.map(s =>
+		all_governorates.map(d => json_comp_prices[s][d]['quick_del'])
+		)
+
+	var porter_ex_rates = all_governorates.map(s =>
+		all_governorates.map(d => json_comp_prices[s][d]['porter_ex'])
+		)
+
+	var del_ex_rates = all_governorates.map(s =>
+		all_governorates.map(d => json_comp_prices[s][d]['del_ex'])
+		)
+
+	var mashkor_rates = all_governorates.map(s =>
+		all_governorates.map(d => (base+(rate * parseFloat(json_gov_distances[s][d]['distance']))).toFixed(2)
+			)
+		)
+
+	all_governorates.forEach(function(source, i){
+
+			chartData_comp_prices[i] = {
+		      labels: all_governorates,
+		      datasets: [{
+		        label: 'Mashkor',
+		        backgroundColor: 'rgb(48,217,196)',
+		        borderWidth: 1,
+		        data: mashkor_rates[i],
+		      }, {
+		        label: 'Quick Del',
+		        backgroundColor: 'rgb(110,76,105)',
+		        data: quick_del_rates[i],
+		        
+		      }, {
+		        label: 'Porter',
+		        backgroundColor: 'rgb(37,96,110)',
+		        data: porter_ex_rates[i],
+		      }, {
+		        label: 'Del Ex',
+		        backgroundColor: 'rgb(106,98,35)',
+		        data: del_ex_rates[i]
+		      }]
+		    };
+			var ctx = document.getElementById(rateDivId).querySelector("#canvas_comp_prices"+String(i)).getContext('2d');
+		    myMixedChart_comp_prices[i] = new Chart(ctx, {     
+		    	type: 'horizontalBar',
+		        data: chartData_comp_prices[i],
+		        options: {
+		        	elements: {
+		            rectangle: {
+		            	borderWidth: 2,
+		            }
+		          },
+					responsive: true,
+					legend: {
+						position: 'right',
+					},
+						title: {
+						display: true,
+						text: source+' Horizontal Bar Chart'
+					}
+		        }
+		      });
+		})
+
+    
 }
