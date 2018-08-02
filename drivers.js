@@ -1285,13 +1285,23 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 		            	borderWidth: 2,
 		            }
 		          },
+		          scales: {
+			            xAxes: [{
+			              display: true,
+			              scaleLabel: {
+			                display: true,
+			                labelString: 'Price (kd)'
+			              }
+			            }],
+			            
+			        },
 					responsive: true,
 					legend: {
 						position: 'right',
 					},
 						title: {
 						display: true,
-						text: source+' Horizontal Bar Chart'
+						text: source+' Governorate Prices'
 					}
 		        }
 		      });
