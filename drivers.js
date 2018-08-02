@@ -126,8 +126,8 @@ function update_json(errors, driverData){
 function get_drivers(divId){
 	
 	var base = document.getElementById(divId).querySelector("#base").value;
-	var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5"; //driver json url
-	// var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
+	// var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5"; //driver json url
+	var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
 	draw_view_rates(base)
 	d3.queue()
 	    .defer(d3.json, driver_url)
