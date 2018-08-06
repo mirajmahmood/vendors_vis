@@ -1345,7 +1345,7 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 			        					else{
 			        						source = i
 			        						dest = all_governorates.indexOf(item.yLabel)
-			        						return label_text+": "+(parseFloat(item.xLabel) + parseFloat(lower_rates[label_text.replace(" (Upper)", "")][source][dest]));
+			        						return label_text+": "+(parseFloat(lower_rates[label_text.replace(" (Upper)", "")][source][dest])+ parseFloat(upper_rates[label_text.replace(" (Upper)", "")][source][dest])).toFixed(2);
 			        					}
 		        					
 		        				}
