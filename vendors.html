@@ -68,7 +68,7 @@
         #driver_map #custom_pickup_rate_comparison_chart{display: flex;}
         #driver_map #canvas_custom_pickup{width:50%;}
         #driver_map #comp_prices_canvas{float: right; margin: 0 auto; width: 100%}
-        #driver_map #comp_prices_canvas canvas {width:500px;}
+        #driver_map #comp_prices_canvas canvas {width:70px;}
         
 
     </style>
@@ -162,7 +162,7 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
  <br/><br/>
 
 <label>Preliminary delivery fee: </label> <div id="preliminary_delivery_fee" style='display: inline;'></div>  <br/><br/>
-<label>Cap: </label> <div id="cap" style='display: inline'></div>  <br/><br/><br/>
+<label>Cap: </label> <div id="cap" style='display: inline'> </div> <input id="cap_value_custom" value="7.000" onchange="javascript:update_driver_comp_prices();" style='display: none;'></input>  <br/><br/><br/>
 
 <label style="font-weight: bold;">Delivery fee: </label> <div id="processed_delivery_fee" style='display: inline'></div> <br/> <br/>
 <label style="font-weight: bold;">Actual cost: </label> <div id="actual_fee_cost" style='display: inline'></div>  <br/><br/>
@@ -223,6 +223,8 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 	function toggle_delivery_type(value){
 		var driver_vendors = document.getElementById("driver_vendors");
 		var driver_custom_pickup = document.getElementById("driver_custom_pickup");
+		var driver_custom_pickup_cap = document.getElementById("cap_value_custom");
+		var driver_cap = document.getElementById("cap");
 		var driver_custom_buy = document.getElementById("driver_custom_buy");
 		var driver_custom_buy_equations = document.getElementById("driver_custom_buy_equations");
 		var driver_custom_buy_equations_input = document.getElementById("driver_custom_buy_equations_input");
@@ -230,7 +232,9 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 		if (value == "custom_pick_up"){
 			driver_vendors.style.display = 'none'
 			driver_custom_pickup.style.display = ''
+			driver_custom_pickup_cap.style.display = ''
 			driver_custom_buy.style.display = 'none'
+			driver_cap.style.display = 'none'
 			// driver_custom_buy_equations.style.display = 'none'
 			// driver_custom_buy_equations_input.style.display = 'none'
 			update_driver_custom_pickup()
@@ -238,7 +242,9 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 		else if (value == "vendors"){
 			driver_vendors.style.display = ''
 			driver_custom_pickup.style.display = 'none'	
+			driver_custom_pickup_cap.style.display = 'none'
 			driver_custom_buy.style.display = 'none'
+			driver_cap.style.display = 'inline'
 			// driver_custom_buy_equations.style.display = 'none'
 			// driver_custom_buy_equations_input.style.display = 'none'
 			update_driver_vendor();
@@ -246,7 +252,9 @@ Delivery fee = <input id="base" value="0.250" onchange="javascript:update_table(
 		else if (value == "custom_buy"){
 			driver_vendors.style.display = 'none'
 			driver_custom_pickup.style.display = 'none'	
+			driver_custom_pickup_cap.style.display = 'none'
 			driver_custom_buy.style.display = ''
+			driver_cap.style.display = 'inline'
 			// driver_custom_buy_equations.style.display = 'inline'
 			// driver_custom_buy_equations_input.style.display = 'inline'
 			update_driver_custom_buy();

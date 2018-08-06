@@ -1185,6 +1185,10 @@ function update_driver_comp_prices(divId="driver_map", actualDivId='preliminary_
 
 
 }
+function calc_delivery_format(base, rate, km){
+	var value = parseFloat(base) + (parseFloat(rate) * parseFloat(km))
+	return (Math.ceil((value.toFixed(3) * 1000) /50 ) * 50)/1000
+}
 function update_comp_prices_profit_per_delivery_chart(divId="driver_map", rateDivId="custom_pickupz_rate_comparison_chart", capDivId='cap'){
 
 	var base = parseFloat(document.getElementById(divId).querySelector("#base").value);
@@ -1192,31 +1196,32 @@ function update_comp_prices_profit_per_delivery_chart(divId="driver_map", rateDi
 	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
 	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
 
+	var cap_value = parseFloat(document.getElementById(divId).querySelector("#cap_value_custom").value);
 
+	var lower_mashkor_rates = all_governorates.map(s =>
+		all_governorates.map(d => 
+			( calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance']) > cap_value ? cap_value : calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance']))
 
-	var quick_del_rates = all_governorates.map(s =>
-		all_governorates.map(d => json_comp_prices[s][d]['quick_del'])
-		)
-
-	var porter_ex_rates = all_governorates.map(s =>
-		all_governorates.map(d => json_comp_prices[s][d]['porter_ex'])
-		)
-
-	var del_ex_rates = all_governorates.map(s =>
-		all_governorates.map(d => json_comp_prices[s][d]['del_ex'])
-		)
-
-	var mashkor_rates = all_governorates.map(s =>
-		all_governorates.map(d => (base+(rate * parseFloat(json_gov_distances[s][d]['distance']))).toFixed(2)
 			)
 		)
 
-	all_governorates.forEach(function(source, i){
-		chartData_comp_prices[i].datasets[0].data = mashkor_rates[i]
-		chartData_comp_prices[i].datasets[1].data = quick_del_rates[i]
-		chartData_comp_prices[i].datasets[2].data = porter_ex_rates[i]
-		chartData_comp_prices[i].datasets[3].data = del_ex_rates[i]
+	var upper_mashkor_rates = all_governorates.map((s, si) =>
+		all_governorates.map((d, di)=> 
+			( 
+				
+				calc_delivery_format(base, rate, json_gov_distances[s][d]['upper']['distance']) > cap_value 
+					? 
+					cap_value - lower_mashkor_rates[si][di] : 
+					calc_delivery_format(base, rate, json_gov_distances[s][d]['upper']['distance']) - calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance'])
+			)
 
+			)
+		)
+
+
+	all_governorates.forEach(function(source, i){
+		chartData_comp_prices[i].datasets[0].data = lower_mashkor_rates[i]
+		chartData_comp_prices[i].datasets[4].data = upper_mashkor_rates[i]
 		myMixedChart_comp_prices[i].update();
 
 	})
@@ -1232,76 +1237,153 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 	var rate = parseFloat(document.getElementById(divId).querySelector("#rate_km").value);
 	var actual_rate = parseFloat(document.getElementById(divId).querySelector("#actual_rate").innerHTML);
 
+	var colour_helper = Chart.helpers.color;
 
-	
-	var quick_del_rates = all_governorates.map(s =>
-		all_governorates.map(d => json_comp_prices[s][d]['quick_del'])
-		)
-
-	var porter_ex_rates = all_governorates.map(s =>
-		all_governorates.map(d => json_comp_prices[s][d]['porter_ex'])
-		)
-
-	var del_ex_rates = all_governorates.map(s =>
-		all_governorates.map(d => json_comp_prices[s][d]['del_ex'])
-		)
-
-	var mashkor_rates = all_governorates.map(s =>
-		all_governorates.map(d => (base+(rate * parseFloat(json_gov_distances[s][d]['distance']))).toFixed(2)
+	var colours = {
+		'mashkor': 'rgb(48,217,196)',
+		'quick_del': 'rgb(110,76,105)',
+		'porter_ex': 'rgb(37,96,110)',
+		'del_ex': 'rgb(106,98,35)'
+	}
+	var lower_rates = {
+		'Mashkor': all_governorates.map(s =>
+				all_governorates.map(d => calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance']))
+			),
+		'Quick Del': all_governorates.map(s =>
+				all_governorates.map(d => json_comp_prices[s][d]['quick_del']['lower'])
+			), 
+		'Porter': all_governorates.map(s =>
+				all_governorates.map(d => json_comp_prices[s][d]['porter_ex']['lower'])
+			),
+		'Del Ex': all_governorates.map(s =>
+			all_governorates.map(d => json_comp_prices[s][d]['del_ex']['lower'])
 			)
-		)
-
+	}
+	var upper_rates = {
+		'Mashkor': all_governorates.map(s =>
+				all_governorates.map(d => (calc_delivery_format(base, rate, json_gov_distances[s][d]['upper']['distance']) - calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance'])))
+			),
+		'Quick Del': all_governorates.map(s =>
+				all_governorates.map(d => json_comp_prices[s][d]['quick_del']['upper'] - json_comp_prices[s][d]['quick_del']['lower'])
+			), 
+		'Porter': all_governorates.map(s =>
+				all_governorates.map(d => json_comp_prices[s][d]['porter_ex']['upper'] - json_comp_prices[s][d]['porter_ex']['lower'])
+			),
+		'Del Ex': all_governorates.map(s =>
+			all_governorates.map(d => json_comp_prices[s][d]['del_ex']['upper'] - json_comp_prices[s][d]['del_ex']['lower'])
+			)
+	}
+	console.log(upper_rates['Mashkor'])
+	console.log(lower_rates['Mashkor'])
 	all_governorates.forEach(function(source, i){
 
 			chartData_comp_prices[i] = {
 		      labels: all_governorates,
 		      datasets: [{
 		        label: 'Mashkor',
-		        backgroundColor: 'rgb(48,217,196)',
+		        backgroundColor: colours['mashkor'],
 		        borderWidth: 1,
-		        data: mashkor_rates[i],
+		        stack: 'Stack 1',
+		        data: lower_rates['Mashkor'][i],
 		      }, {
 		        label: 'Quick Del',
-		        backgroundColor: 'rgb(110,76,105)',
-		        data: quick_del_rates[i],
+		        backgroundColor: colours['quick_del'],
+		        stack: 'Stack 2',
+		        data: lower_rates['Quick Del'][i],
 		        
 		      }, {
 		        label: 'Porter',
-		        backgroundColor: 'rgb(37,96,110)',
-		        data: porter_ex_rates[i],
+		        backgroundColor: colours['porter_ex'],
+		        stack: 'Stack 3',
+		        data: lower_rates['Porter'][i],
 		      }, {
 		        label: 'Del Ex',
-		        backgroundColor: 'rgb(106,98,35)',
-		        data: del_ex_rates[i]
+		        backgroundColor: colours['del_ex'],
+		        stack: 'Stack 4',
+		        data: lower_rates['Del Ex'][i],
+		      },
+		      {
+		        label: 'Mashkor (Upper)',
+		        backgroundColor: colour_helper(colours['mashkor']).alpha(0.5).rgbString(),
+		        stack: 'Stack 1',
+		        data: upper_rates['Mashkor'][i],
+		      },
+		      {
+		        label: 'Quick Del (Upper)',
+		        backgroundColor: colour_helper(colours['quick_del']).alpha(0.5).rgbString(),
+		        stack: 'Stack 2',
+		        data: upper_rates['Quick Del'][i],
+		      },
+		      {
+		        label: 'Porter (Upper)',
+		        backgroundColor: colour_helper(colours['porter_ex']).alpha(0.5).rgbString(),
+		        stack: 'Stack 3',
+		        data: upper_rates['Porter'][i],
+		      },
+		      {
+		        label: 'Del Ex (Upper)',
+		        backgroundColor: colour_helper(colours['del_ex']).alpha(0.5).rgbString(),
+		        stack: 'Stack 4',
+		        data: upper_rates['Del Ex'][i],
 		      }]
 		    };
+		    
 			var ctx = document.getElementById(rateDivId).querySelector("#canvas_comp_prices"+String(i)).getContext('2d');
 		    myMixedChart_comp_prices[i] = new Chart(ctx, {     
 		    	type: 'horizontalBar',
 		        data: chartData_comp_prices[i],
 		        options: {
+		        	tooltips: {
+		        		mode: 'nearest',
+		        		callbacks: {
+		        			label: function(item, d){
+			        					let label_text = d.datasets[item.datasetIndex].label
+
+			        					if (! label_text.includes('Upper')){
+			        						return label_text+" (Lower): "+	item.xLabel;
+			        					}
+			        					else{
+			        						source = i
+			        						dest = all_governorates.indexOf(item.yLabel)
+			        						return label_text+": "+(parseFloat(item.xLabel) + parseFloat(lower_rates[label_text.replace(" (Upper)", "")][source][dest]));
+			        					}
+		        					
+		        				}
+		        			}
+		        		
+
+		        	}, 
+		        	legend: {
+		        		position: 'right',
+		        		labels: {
+		        			filter: function(item, chart) {
+		        				return !item.text.includes('Upper');
+		        			}
+		        		}
+		        	},
 		        	elements: {
 		            rectangle: {
-		            	borderWidth: 2,
+		            	borderWidth: 0,
 		            }
 		          },
 		          scales: {
 			            xAxes: [{
 			              display: true,
+			              stacked: true,
 			              scaleLabel: {
 			                display: true,
 			                labelString: 'Price (kd)'
 			              }
 			            }],
+			            yAxes: [{
+			            	stacked: true,
+			            }],
 			            
 			        },
 					responsive: true,
-					legend: {
-						position: 'right',
-					},
-						title: {
-						display: true,
-						text: source+' Governorate Prices'
+					title: {
+					display: true,
+					text: source+' Governorate Prices'
 					}
 		        }
 		      });
