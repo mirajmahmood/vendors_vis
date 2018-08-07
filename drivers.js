@@ -50,7 +50,6 @@ function fancyTimeFormat(time){
 }
 
 function update_json(errors, driverData, governorateData, comppricesData){
-
 	var divId = "driver_map"
 	var cost = document.getElementById(divId).querySelector("#cost").value;
 
@@ -141,8 +140,8 @@ function get_drivers(divId){
 	var driver_url = "https://query.data.world/s/bxygz4vqkne2jwzj57nx76l2rhc6z5"; //driver json url
 	// var driver_url = "https://query.data.world/s/b423c52o2euc23uvpgiz2ucaaq3ad3"
 
-	var governorate_distances_url = "https://query.data.world/s/affo6urz7ooceum4rcncsx6xrin2o7"
-	var competitor_prices_url = "https://query.data.world/s/ab6776mxj4rvz7ftgjfd3h5fpmwyy7"
+	var governorate_distances_url = "https://query.data.world/s/a4qxoifnsggxisp75soku7shuamw3a"
+	var competitor_prices_url = "https://query.data.world/s/xjcsoho6qnklvtl4clng3z2v3n7pt7"
 
 	draw_view_rates(base)
 
