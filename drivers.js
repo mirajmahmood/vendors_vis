@@ -28,6 +28,8 @@ var chartData_custom_buy = {}
 var myMixedChart_comp_prices = [];
 var chartData_comp_prices = []
 
+var lower_rates = {},
+	upper_rates = {}
 var all_governorates = ["Al Asimah (Capital)", "Hawalli", "Farwaniya", "Mubarak Al-Kabeer", "Ahmadi", "Jahra"]
 function fancyTimeFormat(time){   
     // Hours, minutes and seconds
@@ -1198,20 +1200,20 @@ function update_comp_prices_profit_per_delivery_chart(divId="driver_map", rateDi
 
 	var cap_value = parseFloat(document.getElementById(divId).querySelector("#cap_value_custom").value);
 
-	var lower_mashkor_rates = all_governorates.map(s =>
+	lower_rates['Mashkor'] = all_governorates.map(s =>
 		all_governorates.map(d => 
 			( calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance']) > cap_value ? cap_value : calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance']))
 
 			)
 		)
 
-	var upper_mashkor_rates = all_governorates.map((s, si) =>
+	upper_rates['Mashkor'] = all_governorates.map((s, si) =>
 		all_governorates.map((d, di)=> 
 			( 
 				
 				calc_delivery_format(base, rate, json_gov_distances[s][d]['upper']['distance']) > cap_value 
 					? 
-					cap_value - lower_mashkor_rates[si][di] : 
+					cap_value - lower_rates['Mashkor'][si][di] : 
 					calc_delivery_format(base, rate, json_gov_distances[s][d]['upper']['distance']) - calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance'])
 			)
 
@@ -1220,8 +1222,8 @@ function update_comp_prices_profit_per_delivery_chart(divId="driver_map", rateDi
 
 
 	all_governorates.forEach(function(source, i){
-		chartData_comp_prices[i].datasets[0].data = lower_mashkor_rates[i]
-		chartData_comp_prices[i].datasets[4].data = upper_mashkor_rates[i]
+		chartData_comp_prices[i].datasets[0].data = lower_rates['Mashkor'][i]
+		chartData_comp_prices[i].datasets[4].data = upper_rates['Mashkor'][i]
 		myMixedChart_comp_prices[i].update();
 
 	})
@@ -1245,7 +1247,7 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 		'porter_ex': 'rgb(37,96,110)',
 		'del_ex': 'rgb(106,98,35)'
 	}
-	var lower_rates = {
+	lower_rates = {
 		'Mashkor': all_governorates.map(s =>
 				all_governorates.map(d => calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance']))
 			),
@@ -1259,7 +1261,7 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 			all_governorates.map(d => json_comp_prices[s][d]['del_ex']['lower'])
 			)
 	}
-	var upper_rates = {
+	upper_rates = {
 		'Mashkor': all_governorates.map(s =>
 				all_governorates.map(d => (calc_delivery_format(base, rate, json_gov_distances[s][d]['upper']['distance']) - calc_delivery_format(base, rate, json_gov_distances[s][d]['lower']['distance'])))
 			),
@@ -1273,8 +1275,7 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 			all_governorates.map(d => json_comp_prices[s][d]['del_ex']['upper'] - json_comp_prices[s][d]['del_ex']['lower'])
 			)
 	}
-	console.log(upper_rates['Mashkor'])
-	console.log(lower_rates['Mashkor'])
+
 	all_governorates.forEach(function(source, i){
 
 			chartData_comp_prices[i] = {
@@ -1345,7 +1346,7 @@ function draw_profit_chart_comp_prices(divId="driver_map", rateDivId="custom_pic
 			        					else{
 			        						source = i
 			        						dest = all_governorates.indexOf(item.yLabel)
-			        						return label_text+": "+(parseFloat(lower_rates[label_text.replace(" (Upper)", "")][source][dest])+ parseFloat(upper_rates[label_text.replace(" (Upper)", "")][source][dest])).toFixed(2);
+			        						return label_text+": "+(parseFloat(lower_rates[label_text.replace(" (Upper)", "")][source][dest]) + parseFloat(upper_rates[label_text.replace(" (Upper)", "")][source][dest])).toFixed(2);
 			        					}
 		        					
 		        				}
