@@ -536,20 +536,23 @@ function draw_tier_rates(divId="driver_map", rateDivId='tier_rates'){
 	var tier2_value = 0.75
 	var non_partner_value = 1
 
-	var tier1 = Array.apply(null, {length: n}).map((d,i) => all_costs[i]< tier1_value? 3:null)
-	var tier2 = Array.apply(null, {length: n}).map((d,i) => all_costs[i]< tier2_value? 5:null)
-	var non_partner = Array.apply(null, {length: n}).map((d,i) => all_costs[i] < non_partner_value? 7:null)
+	var tier1 = Array.apply(null, {length: n}).map((d,i) => all_costs[i]<= tier1_value? 3:null)
+	var tier2 = Array.apply(null, {length: n}).map((d,i) => all_costs[i]<= tier2_value? 5:null)
+	var non_partner = Array.apply(null, {length: n}).map((d,i) => all_costs[i] <= non_partner_value? 7:null)
 
-	var tier1_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= tier1_value) && (all_costs[i]< tier1_value))? 2.5:null)
-	var tier2_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= tier2_value) && (all_costs[i]< tier2_value))? 4.5:null)
-	var non_partner_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= non_partner_value) && (all_costs[i]< non_partner_value))? 6.5:null)
+	var tier1_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= tier1_value) && (all_costs[i]<= tier1_value))? 2:null)
+	var tier2_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= tier2_value) && (all_costs[i]<= tier2_value))? 4:null)
+	var non_partner_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= non_partner_value) && (all_costs[i]<= non_partner_value))? 6:null)
+	
+
 	var colour_helper = Chart.helpers.color;
+
 
     chartData_vendor_tiers = {
       labels: distances, 
       datasets: [{
         label: 'Tier 1',
-        borderColor: '#F78297',
+        borderColor: colour_helper('rgb(247,130,151)').alpha(1).rgbString(),
         borderWidth: 2,
         fill: false,
         data: tier1,
@@ -557,7 +560,7 @@ function draw_tier_rates(divId="driver_map", rateDivId='tier_rates'){
       },
       {
         label: 'Tier 2',
-        borderColor: '#50B4D0',
+        borderColor: colour_helper('rgb(80,180,208)').alpha(1).rgbString(),
         borderWidth: 2,
         fill: false,
         data: tier2,
@@ -565,7 +568,7 @@ function draw_tier_rates(divId="driver_map", rateDivId='tier_rates'){
       },
       {
         label: 'Non Partner',
-        borderColor: '#174733',
+        borderColor: colour_helper('rgb(23,71,51)').alpha(1).rgbString(),
         borderWidth: 2,
         fill: false,
         data: non_partner,
@@ -594,6 +597,30 @@ function draw_tier_rates(divId="driver_map", rateDivId='tier_rates'){
         fill: false,
         data: non_partner_saves,
         //yAxisID: 'non_partner-y-axis'
+      },
+      {
+        label: 'Tier 1 same',
+        borderColor: colour_helper('rgb(247,130,151)').alpha(0.05).rgbString(),
+        borderWidth: 2,
+        fill: 2,
+        data: [],
+        //yAxisID: 'tier1-y-axis'
+      },
+      {
+        label: 'Tier 2 same',
+        borderColor: colour_helper('rgb(80,180,208)').alpha(0.05).rgbString(),
+        borderWidth: 2,
+        fill: 2,
+        data: [],
+        //yAxisID: 'tier1-y-axis'
+      },
+      {
+        label: 'Non partner same',
+        borderColor: colour_helper('rgb(23,71,51)').alpha(0.05).rgbString(),
+        borderWidth: 2,
+        fill: 2,
+        data: [],
+        //yAxisID: 'tier1-y-axis'
       }]
 
     };
@@ -612,6 +639,11 @@ function draw_tier_rates(divId="driver_map", rateDivId='tier_rates'){
 							return "Cost: "+all_costs[item.datasetIndex]+", "+ "Delivery fee: "+delivery_fees[item.datasetIndex]
 					}
 				}
+		},
+		plugins: {
+		    filler: {
+		        propagate: false
+		    }
 		}, 
         	scales: {
         	  gridLines: true,
@@ -636,7 +668,7 @@ function draw_tier_rates(divId="driver_map", rateDivId='tier_rates'){
                     boxWidth: 1,
                     usePointStyle: false,
 					filter: function(item, chart) {
-						return !item.text.includes('saves');
+						return (!item.text.includes('saves') && !item.text.includes('same'));
 					}
 				
                 }
@@ -670,19 +702,25 @@ function update_tier_rates(divId="driver_map", rateDivId='tier_rates'){
 	var non_partner_value = 1
 
 	distances.forEach(function(d, i){
-		all_costs.push((actual_rate*d).toFixed(3));
+		all_costs.push(Number((actual_rate*d).toFixed(2)));
 		
-		delivery_fees.push(calc_delivery_format(base, rate, d));
+		delivery_fees.push(Number(calc_delivery_format(base, rate, d)));
 
-		all_profits.push((delivery_fees[i] - all_costs[i]).toFixed(3));
+		all_profits.push(Number((delivery_fees[i] - all_costs[i]).toFixed(3)));
 	})
-	var tier1 = Array.apply(null, {length: n}).map((d,i) => all_costs[i]< tier1_value? 3:null)
-	var tier2 = Array.apply(null, {length: n}).map((d,i) => all_costs[i]< tier2_value? 5:null)
-	var non_partner = Array.apply(null, {length: n}).map((d,i) => all_costs[i] < non_partner_value? 7:null)
+	var tier1 = Array.apply(null, {length: n}).map((d,i) => all_costs[i].toFixed(1) <= tier1_value? 3:null)
+	var tier2 = Array.apply(null, {length: n}).map((d,i) => all_costs[i].toFixed(1)<= tier2_value? 5:null)
+	var non_partner = Array.apply(null, {length: n}).map((d,i) => all_costs[i].toFixed(1) <= non_partner_value? 7:null)
 
-	var tier1_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= tier1_value) && (all_costs[i]< tier1_value))? 2.5:null)
-	var tier2_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= tier2_value) && (all_costs[i]< tier2_value))? 4.5:null)
-	var non_partner_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i] >= non_partner_value) && (all_costs[i]< non_partner_value))? 6.5:null)
+	var tier1_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i].toFixed(1) >= tier1_value) && (all_costs[i].toFixed(1)<= tier1_value))? 2.5:null)
+	var tier2_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i].toFixed(1) >= tier2_value) && (all_costs[i].toFixed(1)<= tier2_value))? 4.5:null)
+	var non_partner_saves = Array.apply(null, {length: n}).map((d,i) => ((delivery_fees[i].toFixed(1) >= non_partner_value) && (all_costs[i].toFixed(1)<= non_partner_value))? 6.5:null)
+
+	var tier1_same = Array.apply(null, {length: n}).map((d,i) => ((!tier1_saves[i-1]) && tier1[i] ? 3:null))
+	var tier2_same = Array.apply(null, {length: n}).map((d,i) => ((!tier1[i+1]) && non_partner[i]? 5:null))
+	var non_partner_same = Array.apply(null, {length: n}).map((d,i) => ((!non_partner_saves[i-1]) && non_partner[i]? 7:null))
+	
+	console.log(all_costs)
 
  	myMixedChart_vendor_tiers['options']['tooltips']['callbacks']['label'] = 
  		function(item, d){
@@ -698,6 +736,9 @@ function update_tier_rates(divId="driver_map", rateDivId='tier_rates'){
 	chartData_vendor_tiers.datasets[3].data = tier1_saves
 	chartData_vendor_tiers.datasets[4].data = tier2_saves
 	chartData_vendor_tiers.datasets[5].data = non_partner_saves
+	chartData_vendor_tiers.datasets[6].data = tier1_same
+	chartData_vendor_tiers.datasets[7].data = tier2_same
+	chartData_vendor_tiers.datasets[8].data = non_partner_same
 	//chartData_custom_pickup.datasets[2].data = dist_from_cap
 	myMixedChart_vendor_tiers.update();
 	
